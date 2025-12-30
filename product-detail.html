@@ -1,0 +1,411 @@
+<!DOCTYPE html>
+<html lang="fr">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Détails Produit – USH</title>
+    <link rel="icon" type="image/png" href="assets/logo.png" />
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <div id="global-loader" class="loader-overlay hidden">
+      <div class="loader-spinner"></div>
+      <p>Chargement du produit…</p>
+    </div>
+    <header class="header">
+      <div class="container header-inner">
+        <nav class="header-nav">
+          <a href="index.html" class="nav-link">Accueil</a>
+          <a href="categories.html" class="nav-link">Catégories</a>
+          <a href="services.html" class="nav-link">Services</a>
+          <a href="about.html" class="nav-link">À propos</a>
+        </nav>
+        <div class="brand">
+          <a href="index.html" style="text-decoration: none; color: inherit; display: flex; align-items: center; gap: 0.5rem;">
+            <img src="assets/logo.png" alt="USH Logo" class="brand-logo" />
+            <span id="christmas-icon" class="christmas-icon hidden" aria-label="Joyeux Noël">🎅</span>
+          </a>
+        </div>
+        <div class="header-actions">
+          <form id="search-form" class="search-form" onsubmit="event.preventDefault(); window.location.href='index.html?search=' + encodeURIComponent(document.getElementById('search-input').value);">
+            <input
+              type="search"
+              id="search-input"
+              placeholder="Rechercher"
+              aria-label="Rechercher un produit"
+            />
+            <button type="submit" class="search-button" aria-label="Rechercher">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="11" cy="11" r="8"></circle>
+                <path d="m21 21-4.35-4.35"></path>
+              </svg>
+            </button>
+          </form>
+          <a href="https://wa.me/243866666630" class="cart-icon" aria-label="Panier">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"></path>
+              <line x1="3" y1="6" x2="21" y2="6"></line>
+              <path d="M16 10a4 4 0 0 1-8 0"></path>
+            </svg>
+            <span class="cart-badge">0</span>
+          </a>
+        </div>
+      </div>
+    </header>
+
+    <main class="main">
+      <div class="container">
+        <div id="loader" class="loader">Chargement du produit…</div>
+        <div id="error" class="error hidden"></div>
+
+        <div id="product-detail" class="product-detail hidden">
+          <!-- Contenu généré par JavaScript -->
+        </div>
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="container">
+        <div class="footer-inner">
+          <div class="footer-column">
+            <h3>À propos de <img src="assets/logo.png" alt="USH" style="height: 24px; width: auto; vertical-align: middle;" /></h3>
+            <p>
+              Catalogue de produits connecté à
+              <a
+                href="https://shopushindi.com/"
+                target="_blank"
+                rel="noreferrer"
+                >shopushindi.com</a
+              >
+              via l'API WordPress / WooCommerce.
+            </p>
+          </div>
+          <div class="footer-column">
+            <h3>Catégories</h3>
+            <ul>
+              <li><a href="categories.html">Phones & Accessoires</a></li>
+              <li><a href="categories.html">Ordinateurs & Accessoires</a></li>
+              <li><a href="categories.html">Audio</a></li>
+              <li><a href="categories.html">Tablets & TVs</a></li>
+            </ul>
+          </div>
+          <div class="footer-column">
+            <h3>Contact</h3>
+            <p>
+              <strong>Adresse:</strong><br />
+              Butembo, Congo DRC<br />
+              Av. du Centre, CETRACA Bldg
+            </p>
+            <p>
+              <strong>Téléphone:</strong><br />
+              <a href="tel:+24386666630">+243 866 666 30</a>
+            </p>
+            <p>
+              <strong>Email:</strong><br />
+              <a href="mailto:info@shopushindi.com">info@shopushindi.com</a>
+            </p>
+            <p>
+              <strong>Horaires:</strong><br />
+              Lundi au Samedi: 08H00 - 17H00<br />
+              Dimanche: Fermé
+            </p>
+          </div>
+        </div>
+        <div class="footer-bottom">
+          <p>&copy; 2025 shopushindi. Tous droits réservés</p>
+          <p>
+            Développé par
+            <a href="https://portfolio-dylan.vercel.app/" target="_blank" rel="noreferrer"
+              >Dylan Kavundama</a
+            >.
+          </p>
+        </div>
+      </div>
+    </footer>
+
+    <script>
+      // Configuration
+      const API_BASE = "https://shopushindi.com/wp-json/wc/store/v1";
+      const WHATSAPP_NUMBER = "+24386666630"; // Numéro WhatsApp pour les commandes
+
+      // Récupération de l'ID produit depuis l'URL
+      const urlParams = new URLSearchParams(window.location.search);
+      const productId = urlParams.get("id");
+
+      const loaderEl = document.getElementById("loader");
+      const errorEl = document.getElementById("error");
+      const productDetailEl = document.getElementById("product-detail");
+      const globalLoader = document.getElementById("global-loader");
+
+      function showLoader(show) {
+        loaderEl.classList.toggle("hidden", !show);
+        if (globalLoader) {
+          globalLoader.classList.toggle("hidden", !show);
+        }
+      }
+
+      function showError(message) {
+        if (!message) {
+          errorEl.classList.add("hidden");
+          errorEl.textContent = "";
+          return;
+        }
+        errorEl.classList.remove("hidden");
+        errorEl.textContent = message;
+      }
+
+      function formatPrice(price, currencyCode) {
+        if (!price || !currencyCode) return "Prix non spécifié";
+        const rawPrice = parseInt(price, 10) / 100;
+        return `${rawPrice.toFixed(2)} ${currencyCode}`;
+      }
+
+      function openWhatsApp(product) {
+        const message = encodeURIComponent(
+          `Bonjour, je souhaite commander le produit suivant:\n\n` +
+            `📦 ${product.name}\n` +
+            `💰 Prix: ${formatPrice(product.prices?.price, product.prices?.currency_code)}\n` +
+            `🆔 Référence: #${product.id}\n\n` +
+            `Merci de me confirmer la disponibilité et les modalités de livraison.`
+        );
+        const whatsappUrl = `https://wa.me/${WHATSAPP_NUMBER.replace(/[^0-9]/g, "")}?text=${message}`;
+        window.open(whatsappUrl, "_blank");
+      }
+
+      async function fetchProductDetail(id) {
+        showError("");
+        showLoader(true);
+        productDetailEl.classList.add("hidden");
+
+        try {
+          const url = `${API_BASE}/products/${id}`;
+          console.log("Appel API:", url);
+
+          const res = await fetch(url, {
+            headers: {
+              Accept: "application/json",
+            },
+          });
+
+          console.log("Réponse API:", res.status, res.statusText);
+
+          if (!res.ok) {
+            throw new Error(`Erreur API (${res.status})`);
+          }
+
+          const product = await res.json();
+          renderProductDetail(product);
+        } catch (err) {
+          console.error(err);
+          showError(
+            "Impossible de charger les détails du produit. " +
+              "Vérifiez que l'ID est correct et que l'API est accessible."
+          );
+        } finally {
+          showLoader(false);
+        }
+      }
+
+      function renderProductDetail(product) {
+        productDetailEl.innerHTML = "";
+
+        // Image principale
+        const imageSection = document.createElement("div");
+        imageSection.className = "product-detail-image";
+
+        const mainImage = document.createElement("img");
+        const rawImage =
+          product.images && product.images[0] ? product.images[0] : null;
+        const fullSrc = rawImage && rawImage.src ? rawImage.src : null;
+        const thumbSrc =
+          rawImage && rawImage.thumbnail ? rawImage.thumbnail : null;
+
+        // On préfère la grande image, mais on tombera automatiquement
+        // sur la miniature si la grande ne charge pas.
+        mainImage.src =
+          fullSrc ||
+          thumbSrc ||
+          "https://via.placeholder.com/600x600?text=USH+Produit";
+        mainImage.alt = product.name || "Produit";
+        mainImage.loading = "lazy";
+
+        let triedThumbFallback = false;
+        mainImage.addEventListener("error", () => {
+          // Si la grande image échoue et qu'on n'a pas encore essayé la miniature,
+          // on bascule sur la miniature.
+          if (!triedThumbFallback && fullSrc && thumbSrc && mainImage.src === fullSrc) {
+            triedThumbFallback = true;
+            mainImage.src = thumbSrc;
+            return;
+          }
+
+          // Sinon, on affiche un placeholder textuel.
+          mainImage.classList.add("hidden");
+          const fallback = document.createElement("div");
+          fallback.className = "image-error";
+          fallback.textContent = "Image du produit non disponible";
+          imageSection.appendChild(fallback);
+        });
+        imageSection.appendChild(mainImage);
+
+        // Galerie d'images (si plusieurs)
+        if (product.images && product.images.length > 1) {
+          const gallery = document.createElement("div");
+          gallery.className = "product-detail-gallery";
+          product.images.slice(0, 4).forEach((img) => {
+            const thumb = document.createElement("img");
+            thumb.src = img.thumbnail || img.src;
+            thumb.alt = product.name;
+            thumb.addEventListener("click", () => {
+              mainImage.src = img.src;
+            });
+            gallery.appendChild(thumb);
+          });
+          imageSection.appendChild(gallery);
+        }
+
+        // Informations produit
+        const infoSection = document.createElement("div");
+        infoSection.className = "product-detail-info";
+
+        // Catégorie
+        if (product.categories && product.categories.length > 0) {
+          const categoryEl = document.createElement("div");
+          categoryEl.className = "product-detail-category";
+          categoryEl.textContent = product.categories[0].name;
+          infoSection.appendChild(categoryEl);
+        }
+
+        // Titre
+        const titleEl = document.createElement("h1");
+        titleEl.className = "product-detail-title";
+        titleEl.textContent = product.name;
+        infoSection.appendChild(titleEl);
+
+        // Prix
+        const priceSection = document.createElement("div");
+        priceSection.className = "product-detail-price-section";
+
+        if (product.prices) {
+          const priceEl = document.createElement("div");
+          priceEl.className = "product-detail-price";
+          priceEl.textContent = formatPrice(
+            product.prices.price,
+            product.prices.currency_code
+          );
+
+          // Prix barré si en promo
+          if (product.on_sale && product.prices.regular_price) {
+            const regularPriceEl = document.createElement("div");
+            regularPriceEl.className = "product-detail-price-regular";
+            regularPriceEl.textContent = formatPrice(
+              product.prices.regular_price,
+              product.prices.currency_code
+            );
+            priceSection.appendChild(regularPriceEl);
+          }
+
+          priceSection.appendChild(priceEl);
+        }
+
+        infoSection.appendChild(priceSection);
+
+        // Description
+        if (product.description || product.short_description) {
+          const descEl = document.createElement("div");
+          descEl.className = "product-detail-description";
+          descEl.innerHTML =
+            product.description || product.short_description || "";
+          infoSection.appendChild(descEl);
+        }
+
+        // Caractéristiques (si disponibles)
+        if (product.attributes && product.attributes.length > 0) {
+          const specsEl = document.createElement("div");
+          specsEl.className = "product-detail-specs";
+          const specsTitle = document.createElement("h3");
+          specsTitle.textContent = "Caractéristiques";
+          specsEl.appendChild(specsTitle);
+
+          const specsList = document.createElement("ul");
+          product.attributes.forEach((attr) => {
+            const li = document.createElement("li");
+            li.innerHTML = `<strong>${attr.name}:</strong> ${attr.options?.join(", ") || "N/A"}`;
+            specsList.appendChild(li);
+          });
+          specsEl.appendChild(specsList);
+          infoSection.appendChild(specsEl);
+        }
+
+        // Boutons d'action
+        const actionsEl = document.createElement("div");
+        actionsEl.className = "product-detail-actions";
+
+        const whatsappButton = document.createElement("button");
+        whatsappButton.className = "product-detail-button-whatsapp";
+        whatsappButton.type = "button";
+        whatsappButton.innerHTML = "📱 Commander sur WhatsApp";
+        whatsappButton.addEventListener("click", () => openWhatsApp(product));
+        actionsEl.appendChild(whatsappButton);
+
+        if (product.permalink) {
+          const viewButton = document.createElement("a");
+          viewButton.href = product.permalink;
+          viewButton.target = "_blank";
+          viewButton.className = "product-detail-button-link";
+          viewButton.textContent = "Voir sur le site";
+          actionsEl.appendChild(viewButton);
+        }
+
+        infoSection.appendChild(actionsEl);
+
+        // Assemblage
+        const wrapper = document.createElement("div");
+        wrapper.className = "product-detail-wrapper";
+        wrapper.appendChild(imageSection);
+        wrapper.appendChild(infoSection);
+
+        productDetailEl.appendChild(wrapper);
+        productDetailEl.classList.remove("hidden");
+      }
+
+      // Chargement initial
+      if (productId) {
+        fetchProductDetail(productId);
+      } else {
+        showError("ID produit manquant dans l'URL.");
+        showLoader(false);
+      }
+
+      // Affichage de l'icône de Noël du 5 décembre au 5 janvier
+      function checkChristmasPeriod() {
+        const christmasIcon = document.getElementById("christmas-icon");
+        if (!christmasIcon) return;
+
+        const today = new Date();
+        const currentMonth = today.getMonth() + 1; // 1-12
+        const currentDay = today.getDate(); // 1-31
+
+        let isChristmasPeriod = false;
+
+        // Du 5 décembre au 31 décembre
+        if (currentMonth === 12 && currentDay >= 5) {
+          isChristmasPeriod = true;
+        }
+        // Du 1er janvier au 5 janvier
+        else if (currentMonth === 1 && currentDay <= 5) {
+          isChristmasPeriod = true;
+        }
+
+        if (isChristmasPeriod) {
+          christmasIcon.classList.remove("hidden");
+        } else {
+          christmasIcon.classList.add("hidden");
+        }
+      }
+
+      checkChristmasPeriod();
+    </script>
+  </body>
+</html>
+

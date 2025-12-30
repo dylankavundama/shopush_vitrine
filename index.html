@@ -1,0 +1,511 @@
+<!DOCTYPE html>
+<html lang="fr">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>USH – Boutique (API WooCommerce)</title>
+    <link rel="icon" type="image/png" href="assets/logo.png" />
+    <link rel="stylesheet" href="styles.css" />
+
+    <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-8882238368661853"
+     crossorigin="anonymous"></script>
+  </head>
+  <body>
+    <div id="global-loader" class="loader-overlay hidden">
+      <div class="loader-spinner"></div>
+      <p>Chargement de la boutique…</p>
+    </div>
+    <header class="header">
+      <div class="container header-inner">
+        <nav class="header-nav">
+          <a href="index.html" class="nav-link active">Accueil</a>
+          <a href="categories.html" class="nav-link">Catégories</a>
+          <a href="services.html" class="nav-link">Services</a>
+          <a href="about.html" class="nav-link">À propos</a>
+        </nav>
+        <div class="brand">
+          <a href="index.html" style="text-decoration: none; color: inherit; display: flex; align-items: center; gap: 0.5rem;">
+            <img src="assets/logo.png" alt="USH Logo" class="brand-logo" />
+            <span id="christmas-icon" class="christmas-icon hidden" aria-label="Joyeux Noël">🎅</span>
+          </a>
+        </div>
+        <div class="header-actions">
+          <form id="search-form" class="search-form">
+            <input
+              type="search"
+              id="search-input"
+              placeholder="Rechercher"
+              aria-label="Rechercher un produit"
+            />
+            <button type="submit" class="search-button" aria-label="Rechercher">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="11" cy="11" r="8"></circle>
+                <path d="m21 21-4.35-4.35"></path>
+              </svg>
+            </button>
+          </form>
+          <a href="https://wa.me/243866666630" class="cart-icon" aria-label="Panier">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"></path>
+              <line x1="3" y1="6" x2="21" y2="6"></line>
+              <path d="M16 10a4 4 0 0 1-8 0"></path>
+            </svg>
+            <span class="cart-badge">0</span>
+          </a>
+        </div>
+      </div>
+    </header>
+
+    <main class="main">
+      <section class="filters container">
+        <div class="filters-row">
+          <div>
+            <label for="order-select">Trier par</label>
+            <select id="order-select">
+              <option value="default">Par défaut</option>
+              <option value="price_asc">Prix croissant</option>
+              <option value="price_desc">Prix décroissant</option>
+              <option value="date_desc">Plus récents</option>
+            </select>
+          </div>
+        </div>
+      </section>
+
+        <section class="products-section container">
+         <div
+           id="products-grid"
+           class="products-grid"
+           aria-live="polite"
+         ></div>
+         <div id="loader" class="loader hidden">Chargement…</div>
+        <div id="error" class="error hidden"></div>
+      </section>
+
+
+
+      <section class="quote-banner-section">
+        <div class="quote-banner">
+          <div class="quote-banner-content">
+            <h2 class="quote-banner-title">Besoin d'un devis personnalisé ?</h2>
+            <p class="quote-banner-text">
+              Contactez-nous pour obtenir un devis sur mesure pour vos besoins. Notre équipe est à votre disposition pour vous conseiller.
+            </p>
+            <button class="quote-banner-button" id="quote-button">
+              Demander un devis
+            </button>
+          </div>
+        </div>
+      </section>
+      <section class="opening-hours-section">
+        <div class="opening-hours-card">
+          <h2 class="opening-hours-title">Horaires d'ouverture</h2>
+          <div class="opening-hours-list" id="opening-hours-list">
+            <!-- Les horaires seront générés par JavaScript -->
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <footer class="footer">
+      <div class="container footer-inner">
+        <div class="footer-column">
+          <h3><img src="assets/logo.png" alt="USH" style="height: 24px; width: auto;" /></h3>
+          <p>Votre boutique en ligne de téléphones, ordinateurs, TV, audio et accessoires.</p>
+          <p>
+            Propulsé par
+            <a href="https://shopushindi.com/" target="_blank" rel="noreferrer"
+              >shopushindi.com</a
+            >
+            via l'API WooCommerce.
+          </p>
+          <p>
+            Développé par
+            <a href="https://portfolio-dylan.vercel.app/" target="_blank" rel="noreferrer"
+              >Dylan Kavundama</a
+            >.
+          </p>
+        </div>
+        <div class="footer-column">
+          <h4>Catégories</h4>
+          <ul>
+            <li><a href="categories.html">Phones &amp; Accessoires</a></li>
+            <li><a href="categories.html">Ordinateurs &amp; Accessoires</a></li>
+            <li><a href="categories.html">Audio &amp; Casques</a></li>
+            <li><a href="categories.html">Tablettes &amp; TV</a></li>
+          </ul>
+        </div>
+        <div class="footer-column">
+          <h4>Contact</h4>
+          <p>Butembo, Congo DRC<br />Av. du Centre, CETRACA Bldg</p>
+          <p>Tél : <a href="tel:+24386666630">+243 866 666 630</a></p>
+          <p>
+            Email :
+            <a href="mailto:info@shopushindi.com">info@shopushindi.com</a>
+          </p>
+          <p>Service : Lun–Sam, 08h00–17h00</p>
+        </div>
+        <div class="footer-column">
+          <h4>Suivez-nous</h4>
+          <div class="social-links">
+            <a href="https://www.facebook.com" target="_blank" rel="noopener noreferrer" class="social-link" aria-label="Facebook">
+              <svg class="social-icon" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/>
+              </svg>
+              <span>Facebook</span>
+            </a>
+            <a href="https://www.instagram.com" target="_blank" rel="noopener noreferrer" class="social-link" aria-label="Instagram">
+              <svg class="social-icon" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z"/>
+              </svg>
+              <span>Instagram</span>
+            </a>
+            <a href="https://wa.me/243866666630" target="_blank" rel="noopener noreferrer" class="social-link" aria-label="WhatsApp">
+              <svg class="social-icon" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413Z"/>
+              </svg>
+              <span>WhatsApp</span>
+            </a>
+          </div>
+        </div>
+      </div>
+   
+    </footer>
+
+    <!-- Bouton flottant WhatsApp -->
+    <a href="https://wa.me/243866666630?text=Bonjour%2C%20je%20souhaite%20vous%20contacter%20pour%20plus%20d%27informations." 
+       class="whatsapp-float" 
+       target="_blank" 
+       rel="noopener noreferrer"
+       aria-label="Contacter sur WhatsApp">
+      <svg class="whatsapp-icon" viewBox="0 0 24 24" fill="currentColor">
+        <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413Z"/>
+      </svg>
+    </a>
+
+    <script>
+      const API_URL =
+        "https://shopushindi.com/wp-json/wc/store/v1/products?per_page=24";
+
+      const productsGrid = document.getElementById("products-grid");
+      const loaderEl = document.getElementById("loader");
+      const errorEl = document.getElementById("error");
+      const searchForm = document.getElementById("search-form");
+      const searchInput = document.getElementById("search-input");
+      const orderSelect = document.getElementById("order-select");
+
+      let lastQuery = "";
+      const globalLoader = document.getElementById("global-loader");
+
+      function showLoader(show) {
+        loaderEl.classList.toggle("hidden", !show);
+        if (globalLoader) {
+          globalLoader.classList.toggle("hidden", !show);
+        }
+      }
+
+      function showError(message) {
+        if (!message) {
+          errorEl.classList.add("hidden");
+          errorEl.innerHTML = "";
+          return;
+        }
+        errorEl.classList.remove("hidden");
+        errorEl.innerHTML = message;
+      }
+
+      async function fetchProducts(query = "") {
+        try {
+          lastQuery = query;
+          showError("");
+          showLoader(true);
+          productsGrid.innerHTML = "";
+
+          // Timeout de 10 secondes pour éviter les blocages
+          const controller = new AbortController();
+          const timeoutId = setTimeout(() => controller.abort(), 10000);
+
+          const url = new URL(API_URL);
+          if (query.trim()) {
+            url.searchParams.set("search", query.trim());
+          }
+
+          const res = await fetch(url.toString(), { signal: controller.signal });
+          clearTimeout(timeoutId);
+
+          if (!res.ok) {
+            throw new Error(`Erreur HTTP : ${res.status}`);
+          }
+
+          const products = await res.json();
+          renderProducts(products);
+        } catch (err) {
+          console.error(err);
+          let friendlyMessage = "Impossible de charger les produits.";
+
+          if (err.name === "AbortError") {
+            friendlyMessage =
+              "Le serveur met trop de temps à répondre. Vérifiez votre connexion puis réessayez.";
+          } else if (
+            err.message.includes("Failed to fetch") ||
+            err.message.includes("NetworkError")
+          ) {
+            friendlyMessage =
+              "Problème de connexion réseau ou le site USH est momentanément indisponible.";
+          }
+
+          const fullMessage = `${friendlyMessage}<br /><small>Détail technique : ${err.message}</small><br /><button id="retry-btn" class="product-button" type="button">Réessayer</button>`;
+
+          showError(fullMessage);
+
+          const retryBtn = document.getElementById("retry-btn");
+          if (retryBtn) {
+            retryBtn.addEventListener("click", () => {
+              fetchProducts(lastQuery);
+            });
+          }
+        } finally {
+          showLoader(false);
+        }
+      }
+
+      function renderProducts(products) {
+        if (!products || products.length === 0) {
+          productsGrid.innerHTML =
+            "<p>Aucun produit trouvé pour ces critères.</p>";
+          return;
+        }
+
+        const fragment = document.createDocumentFragment();
+
+         products.forEach((product) => {
+           const article = document.createElement("article");
+           article.className = "product-card";
+           article.addEventListener("click", () => {
+             if (product.id) {
+               window.location.href = `product-detail.html?id=${product.id}`;
+             } else if (product.permalink) {
+               window.open(product.permalink, "_blank");
+             }
+           });
+
+          // Image
+          const imageWrapper = document.createElement("div");
+          imageWrapper.className = "product-image-wrapper";
+          const img = document.createElement("img");
+          img.className = "product-image";
+          const firstImage = product.images && product.images[0];
+          img.src =
+            (firstImage && firstImage.thumbnail) ||
+            (firstImage && firstImage.src) ||
+            "https://via.placeholder.com/400x300?text=USH+Produit";
+          img.alt = product.name || "Produit";
+          imageWrapper.appendChild(img);
+
+          // Badge de promotion
+          let discountPercentage = 0;
+          const isOnSale = product.on_sale || 
+            (product.prices && 
+             product.prices.regular_price && 
+             product.prices.price && 
+             product.prices.regular_price !== product.prices.price);
+          
+          if (isOnSale && product.prices && product.prices.regular_price && product.prices.price) {
+            const regularPrice = parseInt(product.prices.regular_price, 10) / 100;
+            const salePrice = parseInt(product.prices.price, 10) / 100;
+            if (regularPrice > 0) {
+              discountPercentage = Math.round(((regularPrice - salePrice) / regularPrice) * 100);
+            }
+          }
+
+          if (discountPercentage > 0) {
+            const badge = document.createElement("span");
+            badge.className = "badge-sale";
+            badge.textContent = `-${discountPercentage}%`;
+            article.appendChild(badge);
+          }
+
+          // Catégorie
+          let categoryName = "";
+          if (product.categories && product.categories.length > 0) {
+            categoryName = product.categories[0].name;
+          }
+          const categoryEl = document.createElement("div");
+          categoryEl.className = "product-category";
+          categoryEl.textContent = categoryName || "Produit";
+
+          // Titre
+          const titleEl = document.createElement("h2");
+          titleEl.className = "product-title";
+          titleEl.textContent = product.name;
+
+          // Prix
+          const priceRow = document.createElement("div");
+          priceRow.className = "product-price-row";
+
+          const priceEl = document.createElement("div");
+          priceEl.className = "product-price";
+
+          let priceDisplay = "";
+          let regularPriceDisplay = "";
+          
+          if (
+            product.prices &&
+            product.prices.price &&
+            product.prices.currency_code
+          ) {
+            const rawPrice = parseInt(product.prices.price, 10) / 100;
+            priceDisplay = `${rawPrice.toFixed(2)} ${
+              product.prices.currency_code
+            }`;
+            
+            // Afficher le prix régulier si en promotion
+            if (isOnSale && product.prices.regular_price) {
+              const rawRegularPrice = parseInt(product.prices.regular_price, 10) / 100;
+              regularPriceDisplay = `${rawRegularPrice.toFixed(2)} ${product.prices.currency_code}`;
+            }
+          } else {
+            priceDisplay = "Prix non spécifié";
+          }
+          
+          priceEl.textContent = priceDisplay;
+          priceRow.appendChild(priceEl);
+
+          // Prix régulier barré si en promotion
+          if (regularPriceDisplay) {
+            const regularPriceEl = document.createElement("div");
+            regularPriceEl.className = "product-price-regular";
+            regularPriceEl.textContent = regularPriceDisplay;
+            priceRow.appendChild(regularPriceEl);
+          }
+
+           // Footer
+          const footer = document.createElement("div");
+          footer.className = "product-footer";
+
+          const ratingEl = document.createElement("div");
+          ratingEl.className = "product-rating";
+           ratingEl.textContent = "Nouveau";
+           ratingEl.style.color = "#6b7280";
+ 
+           footer.appendChild(ratingEl);
+
+          article.appendChild(imageWrapper);
+          article.appendChild(categoryEl);
+          article.appendChild(titleEl);
+          article.appendChild(priceRow);
+          article.appendChild(footer);
+
+          fragment.appendChild(article);
+        });
+
+        productsGrid.appendChild(fragment);
+      }
+
+      searchForm.addEventListener("submit", (e) => {
+        e.preventDefault();
+        fetchProducts(searchInput.value);
+      });
+
+      // Horaires d'ouverture
+      function renderOpeningHours() {
+        const hoursList = document.getElementById("opening-hours-list");
+        if (!hoursList) return;
+
+        const openingHours = [
+          { day: "Lundi", hours: "08h00 - 17h00", isToday: false },
+          { day: "Mardi", hours: "08h00 - 17h00", isToday: false },
+          { day: "Mercredi", hours: "08h00 - 17h00", isToday: false },
+          { day: "Jeudi", hours: "08h00 - 17h00", isToday: false },
+          { day: "Vendredi", hours: "08h00 - 17h00", isToday: false },
+          { day: "Samedi", hours: "08h00 - 17h00", isToday: false },
+          { day: "Dimanche", hours: "Fermé", isToday: false, isClosed: true },
+        ];
+
+        // Déterminer le jour actuel
+        const today = new Date().getDay();
+        const dayIndex = today === 0 ? 6 : today - 1; // Convertir dimanche (0) en 6
+        openingHours[dayIndex].isToday = true;
+
+        hoursList.innerHTML = openingHours
+          .map(
+            (item) => `
+          <div class="opening-hours-item ${item.isToday ? "today" : ""} ${
+              item.isClosed ? "closed" : ""
+            }">
+            <span class="opening-hours-day">${item.day}</span>
+            <span class="opening-hours-time">${item.hours}</span>
+            ${item.isToday ? '<span class="opening-hours-badge">Aujourd\'hui</span>' : ""}
+          </div>
+        `
+          )
+          .join("");
+      }
+
+      // Gestion du scroll pour masquer/afficher le header
+      let lastScrollTop = 0;
+      let isScrolling = false;
+
+      function handleScroll() {
+        if (isScrolling) return;
+        
+        isScrolling = true;
+        requestAnimationFrame(() => {
+          const header = document.querySelector(".header");
+          if (!header) {
+            isScrolling = false;
+            return;
+          }
+          
+          const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
+          
+          if (scrollTop > lastScrollTop && scrollTop > 100) {
+            // Scroll vers le bas - masquer le header
+            header.classList.add("header-hidden");
+          } else {
+            // Scroll vers le haut - afficher le header
+            header.classList.remove("header-hidden");
+          }
+          
+          lastScrollTop = scrollTop <= 0 ? 0 : scrollTop;
+          isScrolling = false;
+        });
+      }
+
+      window.addEventListener("scroll", handleScroll, { passive: true });
+
+      // Affichage de l'icône de Noël du 5 décembre au 5 janvier
+      function checkChristmasPeriod() {
+        const christmasIcon = document.getElementById("christmas-icon");
+        if (!christmasIcon) return;
+
+        const today = new Date();
+        const currentMonth = today.getMonth() + 1; // 1-12
+        const currentDay = today.getDate(); // 1-31
+
+        let isChristmasPeriod = false;
+
+        // Du 5 décembre au 31 décembre
+        if (currentMonth === 12 && currentDay >= 5) {
+          isChristmasPeriod = true;
+        }
+        // Du 1er janvier au 5 janvier
+        else if (currentMonth === 1 && currentDay <= 5) {
+          isChristmasPeriod = true;
+        }
+
+        if (isChristmasPeriod) {
+          christmasIcon.classList.remove("hidden");
+        } else {
+          christmasIcon.classList.add("hidden");
+        }
+      }
+
+      // Chargement initial
+      document.addEventListener("DOMContentLoaded", () => {
+        fetchProducts();
+        renderOpeningHours();
+        checkChristmasPeriod();
+      });
+    </script>
+  </body>
+</html>

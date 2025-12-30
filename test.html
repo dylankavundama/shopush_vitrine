@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Catalogue E-Commerce Avancé</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        /* CSS Rénové pour un look E-Commerce */
+        :root {
+            --primary-color: #007bff;
+            --text-color: #333;
+            --bg-color: #f8f9fa;
+        }
+
+        body {
+            font-family: 'Poppins', sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+        }
+
+        h1 {
+            color: var(--primary-color);
+            text-align: center;
+            margin-bottom: 30px;
+            font-weight: 700;
+        }
+
+        #product-list {
+            display: grid;
+            /* Crée une grille responsive avec des colonnes de minimum 300px */
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 30px;
+            padding: 0;
+        }
+
+        .product-card {
+            background-color: #fff;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+            transition: transform 0.3s, box-shadow 0.3s;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .product-card:hover {
+            transform: translateY(-8px);
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.2);
+        }
+
+        .product-image-container {
+            height: 250px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background-color: #eee;
+        }
+
+        .product-image {
+            width: 100%;
+            height: 100%;
+            object-fit: cover; /* Assure que l'image couvre le conteneur */
+            display: block;
+        }
+        
+        .product-placeholder {
+            font-size: 1.5em;
+            color: #999;
+        }
+
+        .product-details {
+            padding: 20px;
+            flex-grow: 1; /* Permet aux détails de prendre l'espace restant */
+            display: flex;
+            flex-direction: column;
+        }
+
+        .product-details h2 {
+            font-size: 1.4em;
+            color: var(--text-color);
+            margin: 0 0 10px 0;
+            height: 2.8em; /* Fixe la hauteur pour aligner les cartes */
+            overflow: hidden;
+        }
+
+        .product-price {
+            font-size: 1.8em;
+            color: #28a745; /* Vert pour le prix */
+            font-weight: 700;
+            margin: 10px 0;
+        }
+
+        .product-desc {
+            font-size: 0.9em;
+            color: #6c757d;
+            margin-bottom: 15px;
+            flex-grow: 1;
+        }
+
+        .stock-status {
+            font-weight: 600;
+            padding: 5px 10px;
+            border-radius: 5px;
+            align-self: flex-start; /* Aligner le statut à gauche */
+        }
+
+        .in-stock {
+            background-color: #d4edda;
+            color: #155724;
+        }
+
+        .out-of-stock {
+            background-color: #f8d7da;
+            color: #721c24;
+        }
+
+        .loading, .error {
+            grid-column: 1 / -1; /* Prend toute la largeur de la grille */
+            text-align: center;
+            font-size: 1.5em;
+            color: var(--primary-color);
+            padding: 50px;
+        }
+    </style>
+</head>
+<body>
+
+    <h1>Catalogue de Produits E-Commerce</h1>
+
+    <div id="product-list">
+        <p class="loading">Chargement des données, veuillez patienter...</p>
+    </div>
+
+    <script>
+        const apiUrl = 'https://shopushindi.com/wp-json/wc/store/v1/products';
+        const productListContainer = document.getElementById('product-list');
+
+        // Fonction utilitaire pour retirer le HTML des descriptions
+        function stripHtml(html) {
+            const tempDiv = document.createElement('div');
+            tempDiv.innerHTML = html;
+            let text = tempDiv.textContent || tempDiv.innerText || '';
+            
+            // Troncature pour garder la carte compacte
+            const maxLen = 100;
+            if (text.length > maxLen) {
+                text = text.substring(0, maxLen).trim() + '...';
+            }
+            return text;
+        }
+
+        async function fetchProducts() {
+            try {
+                const response = await fetch(apiUrl);
+
+                if (!response.ok) {
+                    throw new Error(`Erreur HTTP : ${response.status}`);
+                }
+
+                const products = await response.json();
+                productListContainer.innerHTML = ''; // Vider le message de chargement
+
+                if (products.length === 0) {
+                    productListContainer.innerHTML = '<p class="loading">Aucun produit trouvé dans le catalogue.</p>';
+                    return;
+                }
+
+                products.forEach(product => {
+                    const productDiv = document.createElement('div');
+                    productDiv.className = 'product-card';
+
+                    // --- 1. Image ---
+                    const imageContainer = document.createElement('div');
+                    imageContainer.className = 'product-image-container';
+
+                    const imageUrl = product.images.length > 0 ? product.images[0].src : null;
+
+                    if (imageUrl) {
+                        const image = document.createElement('img');
+                        image.src = imageUrl;
+                        image.alt = product.name;
+                        image.className = 'product-image';
+                        imageContainer.appendChild(image);
+                    } else {
+                        const placeholder = document.createElement('span');
+                        placeholder.className = 'product-placeholder';
+                        placeholder.textContent = 'IMAGE';
+                        imageContainer.appendChild(placeholder);
+                    }
+                    productDiv.appendChild(imageContainer);
+
+
+                    // --- 2. Détails ---
+                    const detailsDiv = document.createElement('div');
+                    detailsDiv.className = 'product-details';
+
+                    // Nom
+                    const name = document.createElement('h2');
+                    name.textContent = product.name;
+                    detailsDiv.appendChild(name);
+
+                    // Prix et Devise
+                    const priceElement = document.createElement('p');
+                    priceElement.className = 'product-price';
+                    let priceDisplay = 'Prix non spécifié';
+
+                    if (product.prices && product.prices.price && product.prices.currency_code) {
+                        // Supposant que le prix est en centimes/unité la plus petite (standard WooCommerce)
+                        const rawPrice = parseInt(product.prices.price) / 100;
+                        const currencyCode = product.prices.currency_code;
+                        
+                        priceDisplay = `${rawPrice.toFixed(2)} ${currencyCode}`;
+                    }
+                    priceElement.textContent = priceDisplay;
+                    detailsDiv.appendChild(priceElement);
+
+                    // Description (courte et nettoyée)
+                    const descriptionHtml = product.short_description || product.description || '';
+                    const description = document.createElement('p');
+                    description.className = 'product-desc';
+                    description.textContent = stripHtml(descriptionHtml);
+                    detailsDiv.appendChild(description);
+                    
+                    // Statut du Stock
+                    const stockStatus = document.createElement('span');
+                    const isInStock = product.is_in_stock;
+                    stockStatus.className = `stock-status ${isInStock ? 'in-stock' : 'out-of-stock'}`;
+                    stockStatus.textContent = isInStock ? '✅ En Stock' : '❌ Rupture de Stock';
+                    detailsDiv.appendChild(stockStatus);
+
+
+                    productDiv.appendChild(detailsDiv);
+                    productListContainer.appendChild(productDiv);
+                });
+
+            } catch (error) {
+                console.error('Erreur lors de la récupération des produits :', error);
+                productListContainer.innerHTML = `<p class="error">
+                    Impossible de charger les données. Vérifiez si les paramètres CORS sont correctement appliqués sur le serveur shopushindi.com. 
+                    <br>Erreur: ${error.message}
+                </p>`;
+            }
+        }
+
+        fetchProducts();
+    </script>
+
+</body>
+</html>
