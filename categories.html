@@ -6,8 +6,21 @@
     <title>Catégories – USH</title>
     <link rel="icon" type="image/png" href="assets/logo.png" />
     <link rel="stylesheet" href="styles.css" />
+    <script>
+      // Afficher le loader immédiatement (avant le chargement du DOM)
+      (function() {
+        document.addEventListener('DOMContentLoaded', function() {
+          const loader = document.getElementById('global-loader');
+          if (loader) loader.style.display = 'flex';
+        });
+      })();
+    </script>
   </head>
   <body>
+    <div id="global-loader" class="loader-overlay" style="display: flex;">
+      <div class="loader-spinner"></div>
+      <p>Chargement…</p>
+    </div>
     <header class="header">
       <div class="container header-inner">
         <nav class="header-nav">
@@ -37,6 +50,9 @@
               </svg>
             </button>
           </form>
+          <button id="language-toggle" class="language-toggle" aria-label="Changer de langue" title="Changer de langue">
+            <span id="language-flag">🇫🇷</span>
+          </button>
           <a href="https://wa.me/243866666630" class="cart-icon" aria-label="Panier">
             <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
               <path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"></path>
@@ -127,15 +143,137 @@
       </div>
     </footer>
 
+    <!-- Menu de navigation mobile (bottom nav) -->
+    <nav class="bottom-nav" id="bottom-nav">
+      <a href="index.html" class="nav-item" aria-label="Accueil">
+        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
+          <polyline points="9 22 9 12 15 12 15 22"></polyline>
+        </svg>
+        <span>Accueil</span>
+      </a>
+      <a href="categories.html" class="nav-item active" aria-label="Catégories">
+        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <rect x="3" y="3" width="7" height="7"></rect>
+          <rect x="14" y="3" width="7" height="7"></rect>
+          <rect x="14" y="14" width="7" height="7"></rect>
+          <rect x="3" y="14" width="7" height="7"></rect>
+        </svg>
+        <span>Catégories</span>
+      </a>
+      <button class="nav-item" id="nav-search-btn" aria-label="Rechercher">
+        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <circle cx="11" cy="11" r="8"></circle>
+          <path d="m21 21-4.35-4.35"></path>
+        </svg>
+        <span>Recherche</span>
+      </button>
+      <a href="https://wa.me/243866666630" class="nav-item" aria-label="Panier">
+        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"></path>
+          <line x1="3" y1="6" x2="21" y2="6"></line>
+          <path d="M16 10a4 4 0 0 1-8 0"></path>
+        </svg>
+        <span>Panier</span>
+      </a>
+    </nav>
+
     <script>
       const API_URL = "https://shopushindi.com/wp-json/wc/store/v1/products?per_page=100";
 
       const categoriesContainer = document.getElementById("categories-container");
       const loaderEl = document.getElementById("loader");
       const errorEl = document.getElementById("error");
+      const globalLoader = document.getElementById("global-loader");
+
+      // ====== Gestion des Favoris ======
+      const FAVORITES_KEY = "ush_favorites";
+
+      function getFavorites() {
+        try {
+          const favorites = localStorage.getItem(FAVORITES_KEY);
+          return favorites ? JSON.parse(favorites) : [];
+        } catch (err) {
+          return [];
+        }
+      }
+
+      function saveFavorites(favorites) {
+        try {
+          localStorage.setItem(FAVORITES_KEY, JSON.stringify(favorites));
+        } catch (err) {
+          console.error("Erreur lors de la sauvegarde:", err);
+        }
+      }
+
+      function isFavorite(productId) {
+        return getFavorites().includes(productId);
+      }
+
+      function toggleFavorite(productId) {
+        const favorites = getFavorites();
+        const index = favorites.indexOf(productId);
+        
+        if (index > -1) {
+          favorites.splice(index, 1);
+        } else {
+          favorites.push(productId);
+        }
+        
+        saveFavorites(favorites);
+        return favorites.includes(productId);
+      }
+
+      function updateFavoriteIcon(button, productId) {
+        const icon = button.querySelector(".favorite-icon");
+        if (isFavorite(productId)) {
+          button.classList.add("active");
+          icon.setAttribute("fill", "#ef4444");
+          icon.setAttribute("stroke", "#ef4444");
+          button.setAttribute("aria-label", "Retirer des favoris");
+        } else {
+          button.classList.remove("active");
+          icon.setAttribute("fill", "none");
+          icon.setAttribute("stroke", "currentColor");
+          button.setAttribute("aria-label", "Ajouter aux favoris");
+        }
+      }
+
+      function updateFavoriteCount() {
+        const favorites = getFavorites();
+        const count = favorites.length;
+        const navFavoriteBadge = document.getElementById("nav-favorite-count");
+        if (navFavoriteBadge) {
+          navFavoriteBadge.textContent = count > 0 ? count : "";
+          navFavoriteBadge.style.display = count > 0 ? "flex" : "none";
+        }
+      }
+
+      function showFavoriteNotification(message, isAdded) {
+        let notification = document.getElementById("favorite-notification");
+        if (!notification) {
+          notification = document.createElement("div");
+          notification.id = "favorite-notification";
+          notification.className = "favorite-notification";
+          document.body.appendChild(notification);
+        }
+        notification.textContent = message;
+        notification.className = `favorite-notification ${isAdded ? "added" : "removed"}`;
+        notification.style.display = "block";
+        setTimeout(() => {
+          notification.style.opacity = "0";
+          setTimeout(() => {
+            notification.style.display = "none";
+            notification.style.opacity = "1";
+          }, 300);
+        }, 2000);
+      }
 
       function showLoader(show) {
         loaderEl.classList.toggle("hidden", !show);
+        if (globalLoader) {
+          globalLoader.classList.toggle("hidden", !show);
+        }
       }
 
       function showError(message) {
@@ -194,6 +332,29 @@
           badge.textContent = `-${discountPercentage}%`;
           article.appendChild(badge);
         }
+
+        // Bouton Favoris
+        const favoriteBtn = document.createElement("button");
+        favoriteBtn.className = "product-favorite-btn";
+        favoriteBtn.setAttribute("aria-label", "Ajouter aux favoris");
+        favoriteBtn.setAttribute("data-product-id", product.id);
+        favoriteBtn.addEventListener("click", (e) => {
+          e.stopPropagation();
+          toggleFavorite(product.id);
+          updateFavoriteIcon(favoriteBtn, product.id);
+          updateFavoriteCount();
+        });
+        
+        const favoriteIcon = document.createElement("svg");
+        favoriteIcon.className = "favorite-icon";
+        favoriteIcon.setAttribute("viewBox", "0 0 24 24");
+        favoriteIcon.setAttribute("fill", "none");
+        favoriteIcon.setAttribute("stroke", "currentColor");
+        favoriteIcon.setAttribute("stroke-width", "2");
+        favoriteIcon.innerHTML = '<path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path>';
+        favoriteBtn.appendChild(favoriteIcon);
+        article.appendChild(favoriteBtn);
+        updateFavoriteIcon(favoriteBtn, product.id);
 
         // Catégorie
         let categoryName = "";
@@ -269,6 +430,10 @@
         try {
           showError("");
           showLoader(true);
+          // Afficher le loader global
+          if (globalLoader) {
+            globalLoader.classList.remove("hidden");
+          }
           categoriesContainer.innerHTML = "";
 
           const controller = new AbortController();
@@ -339,6 +504,10 @@
           showError(friendlyMessage);
         } finally {
           showLoader(false);
+          // S'assurer que le loader global est masqué
+          if (globalLoader) {
+            globalLoader.classList.add("hidden");
+          }
         }
       }
 
@@ -369,9 +538,197 @@
         }
       }
 
+      // Fonction pour filtrer et scroller vers une catégorie spécifique
+      function filterByCategory(categoryName) {
+        if (!categoryName) return;
+        
+        // Attendre que les produits soient chargés
+        const checkInterval = setInterval(() => {
+          const categorySections = document.querySelectorAll('.category-section');
+          if (categorySections.length === 0) return; // Attendre que les sections soient créées
+          
+          clearInterval(checkInterval);
+          
+          let found = false;
+          categorySections.forEach((section) => {
+            const title = section.querySelector('.category-title');
+            if (title && title.textContent.trim() === categoryName.trim()) {
+              found = true;
+              
+              // Ajouter un style pour mettre en évidence
+              section.style.border = '2px solid #6366f1';
+              section.style.borderRadius = '1rem';
+              section.style.padding = '1.5rem';
+              section.style.marginBottom = '2rem';
+              section.style.background = 'linear-gradient(to bottom, #f9fafb, #ffffff)';
+              
+              // Scroller vers la section avec un offset pour le header
+              const headerOffset = 100;
+              const elementPosition = section.getBoundingClientRect().top;
+              const offsetPosition = elementPosition + window.pageYOffset - headerOffset;
+              
+              window.scrollTo({
+                top: offsetPosition,
+                behavior: 'smooth'
+              });
+              
+              // Mettre à jour le titre de la page
+              const heroTitle = document.querySelector('.categories-title');
+              if (heroTitle) {
+                heroTitle.textContent = categoryName;
+              }
+              
+              const heroSubtitle = document.querySelector('.categories-subtitle');
+              if (heroSubtitle) {
+                heroSubtitle.textContent = `Découvrez tous nos produits ${categoryName}`;
+              }
+            }
+          });
+          
+          if (!found) {
+            console.warn(`Catégorie "${categoryName}" non trouvée`);
+          }
+        }, 200);
+        
+        // Arrêter après 5 secondes maximum
+        setTimeout(() => clearInterval(checkInterval), 5000);
+      }
+
+      // Gestion du bouton recherche dans le menu mobile
+      const navSearchBtn = document.getElementById('nav-search-btn');
+      if (navSearchBtn) {
+        navSearchBtn.addEventListener('click', () => {
+          window.location.href = 'index.html';
+        });
+      }
+
+      // ====== Gestion de la Langue ======
+      const LANGUAGE_KEY = "ush_language";
+      let currentLanguage = getSavedLanguage() || "fr";
+
+      const translations = {
+        fr: {
+          "nav.home": "Accueil",
+          "nav.categories": "Catégories",
+          "nav.services": "Services",
+          "nav.about": "À propos",
+          "nav.search": "Rechercher",
+          "nav.favorites": "Favoris",
+          "nav.cart": "Panier",
+          "categories.title": "Nos Catégories",
+          "categories.subtitle": "Découvrez notre large gamme de produits",
+          "loading.categories": "Chargement des produits…",
+          "favorites.add": "Ajouté aux favoris !",
+          "favorites.remove": "Retiré des favoris !"
+        },
+        en: {
+          "nav.home": "Home",
+          "nav.categories": "Categories",
+          "nav.services": "Services",
+          "nav.about": "About",
+          "nav.search": "Search",
+          "nav.favorites": "Favorites",
+          "nav.cart": "Cart",
+          "categories.title": "Our Categories",
+          "categories.subtitle": "Discover our wide range of products",
+          "loading.categories": "Loading products…",
+          "favorites.add": "Added to favorites!",
+          "favorites.remove": "Removed from favorites!"
+        }
+      };
+
+      function getSavedLanguage() {
+        try {
+          return localStorage.getItem(LANGUAGE_KEY) || "fr";
+        } catch (err) {
+          return "fr";
+        }
+      }
+
+      function saveLanguage(lang) {
+        try {
+          localStorage.setItem(LANGUAGE_KEY, lang);
+        } catch (err) {
+          console.error("Erreur lors de la sauvegarde de la langue:", err);
+        }
+      }
+
+      function t(key) {
+        return translations[currentLanguage][key] || translations.fr[key] || key;
+      }
+
+      function updateLanguageButton() {
+        const languageToggle = document.getElementById("language-toggle");
+        const languageFlag = document.getElementById("language-flag");
+        if (languageToggle && languageFlag) {
+          languageFlag.textContent = currentLanguage === "fr" ? "🇬🇧" : "🇫🇷";
+          languageToggle.setAttribute("title", currentLanguage === "fr" ? "Switch to English" : "Passer en français");
+          languageToggle.setAttribute("aria-label", currentLanguage === "fr" ? "Switch to English" : "Passer en français");
+        }
+      }
+
+      function applyTranslations() {
+        const navLinks = document.querySelectorAll('.nav-link');
+        if (navLinks.length >= 4) {
+          navLinks[0].textContent = t("nav.home");
+          navLinks[1].textContent = t("nav.categories");
+          navLinks[2].textContent = t("nav.services");
+          navLinks[3].textContent = t("nav.about");
+        }
+
+        const searchInput = document.getElementById("search-input");
+        if (searchInput) searchInput.placeholder = t("nav.search");
+
+        const categoriesTitle = document.querySelector(".categories-title");
+        if (categoriesTitle) categoriesTitle.textContent = t("categories.title");
+
+        const categoriesSubtitle = document.querySelector(".categories-subtitle");
+        if (categoriesSubtitle) categoriesSubtitle.textContent = t("categories.subtitle");
+
+        const bottomNavItems = document.querySelectorAll('.bottom-nav .nav-item span');
+        bottomNavItems.forEach((item, index) => {
+          const texts = [t("nav.home"), t("nav.categories"), t("nav.search"), t("nav.favorites"), t("nav.cart")];
+          if (texts[index]) item.textContent = texts[index];
+        });
+
+        updateLanguageButton();
+        document.documentElement.lang = currentLanguage;
+      }
+
+      function toggleLanguage() {
+        const newLang = currentLanguage === "fr" ? "en" : "fr";
+        currentLanguage = newLang;
+        saveLanguage(newLang);
+        applyTranslations();
+        // Recharger les produits pour appliquer les traductions
+        fetchProducts();
+      }
+
       document.addEventListener("DOMContentLoaded", () => {
+        // Initialiser la langue
+        currentLanguage = getSavedLanguage() || "fr";
+        applyTranslations();
+
+        // Gérer le bouton de toggle de langue
+        const languageToggle = document.getElementById("language-toggle");
+        if (languageToggle) {
+          languageToggle.addEventListener("click", toggleLanguage);
+        }
+        // Vérifier si un paramètre de catégorie est présent dans l'URL
+        const urlParams = new URLSearchParams(window.location.search);
+        const categoryParam = urlParams.get('category');
+        
         fetchProducts();
         checkChristmasPeriod();
+        updateFavoriteCount();
+        
+        // Si une catégorie est spécifiée, filtrer après le chargement
+        if (categoryParam) {
+          // Attendre un peu plus longtemps pour que les produits soient chargés
+          setTimeout(() => {
+            filterByCategory(decodeURIComponent(categoryParam));
+          }, 1500);
+        }
       });
     </script>
   </body>

@@ -11,9 +11,29 @@
      crossorigin="anonymous"></script>
   </head>
   <body>
+    <!-- Modal de sélection de langue -->
+    <div id="language-modal" class="language-modal hidden">
+      <div class="language-modal-content">
+        <div class="language-modal-header">
+          <h2 class="language-modal-title">Choisissez votre langue / Choose your language</h2>
+          <p class="language-modal-subtitle">Sélectionnez votre langue préférée / Select your preferred language</p>
+        </div>
+        <div class="language-options">
+          <button class="language-option" data-lang="fr">
+            <span class="language-flag">🇫🇷</span>
+            <span class="language-name">Français</span>
+          </button>
+          <button class="language-option" data-lang="en">
+            <span class="language-flag">🇬🇧</span>
+            <span class="language-name">English</span>
+          </button>
+        </div>
+      </div>
+    </div>
+
     <div id="global-loader" class="loader-overlay hidden">
       <div class="loader-spinner"></div>
-      <p>Chargement de la boutique…</p>
+      <p id="loader-text">Chargement de la boutique…</p>
     </div>
     <header class="header">
       <div class="container header-inner">
@@ -44,6 +64,15 @@
               </svg>
             </button>
           </form>
+          <button id="language-toggle" class="language-toggle" aria-label="Changer de langue" title="Changer de langue">
+            <span id="language-flag">🇫🇷</span>
+          </button>
+          <a href="favorites.html" class="cart-icon" aria-label="Favoris" style="position: relative;">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path>
+            </svg>
+            <span id="favorite-count-badge" class="cart-badge" style="display: none;">0</span>
+          </a>
           <a href="https://wa.me/243866666630" class="cart-icon" aria-label="Panier">
             <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
               <path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"></path>
@@ -57,15 +86,27 @@
     </header>
 
     <main class="main">
+      <!-- Section Catégories Populaires -->
+      <section class="popular-categories-section container">
+        <div class="section-header">
+          <h2 id="popular-categories-title">Catégories populaires</h2>
+          <p id="popular-categories-subtitle">Découvrez nos catégories les plus demandées</p>
+          <a href="categories.html" class="all-cats-btn" id="all-cats-btn">Toutes les catégories</a>
+        </div>
+        <div id="popular-categories-grid" class="popular-categories-grid">
+          <!-- Les catégories seront générées par JavaScript -->
+        </div>
+      </section>
+
       <section class="filters container">
         <div class="filters-row">
           <div>
-            <label for="order-select">Trier par</label>
+            <label for="order-select" id="sort-label">Trier par</label>
             <select id="order-select">
-              <option value="default">Par défaut</option>
-              <option value="price_asc">Prix croissant</option>
-              <option value="price_desc">Prix décroissant</option>
-              <option value="date_desc">Plus récents</option>
+              <option value="default" id="sort-default">Par défaut</option>
+              <option value="price_asc" id="sort-price-asc">Prix croissant</option>
+              <option value="price_desc" id="sort-price-desc">Prix décroissant</option>
+              <option value="date_desc" id="sort-date-desc">Plus récents</option>
             </select>
           </div>
         </div>
@@ -86,19 +127,19 @@
       <section class="quote-banner-section">
         <div class="quote-banner">
           <div class="quote-banner-content">
-            <h2 class="quote-banner-title">Besoin d'un devis personnalisé ?</h2>
-            <p class="quote-banner-text">
+          <h2 class="quote-banner-title" id="quote-title">Besoin d'un devis personnalisé ?</h2>
+          <p class="quote-banner-text" id="quote-text">
               Contactez-nous pour obtenir un devis sur mesure pour vos besoins. Notre équipe est à votre disposition pour vous conseiller.
             </p>
-            <button class="quote-banner-button" id="quote-button">
-              Demander un devis
+          <button class="quote-banner-button" id="quote-button" onclick="window.open('https://wa.me/243866666630?text=' + encodeURIComponent(currentLanguage === 'fr' ? 'Bonjour, je souhaite demander un devis personnalisé pour mes besoins. Merci de me contacter.' : 'Hello, I would like to request a personalized quote for my needs. Please contact me.'), '_blank')">
+            <span id="quote-button-text">Demander un devis</span>
             </button>
           </div>
         </div>
       </section>
       <section class="opening-hours-section">
         <div class="opening-hours-card">
-          <h2 class="opening-hours-title">Horaires d'ouverture</h2>
+          <h2 class="opening-hours-title" id="opening-hours-title">Horaires d'ouverture</h2>
           <div class="opening-hours-list" id="opening-hours-list">
             <!-- Les horaires seront générés par JavaScript -->
           </div>
@@ -116,7 +157,7 @@
             <a href="https://shopushindi.com/" target="_blank" rel="noreferrer"
               >shopushindi.com</a
             >
-            via l'API WooCommerce.
+         
           </p>
           <p>
             Développé par
@@ -171,6 +212,40 @@
    
     </footer>
 
+    <!-- Menu de navigation mobile (bottom nav) -->
+    <nav class="bottom-nav" id="bottom-nav">
+      <a href="index.html" class="nav-item active" aria-label="Accueil">
+        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
+          <polyline points="9 22 9 12 15 12 15 22"></polyline>
+        </svg>
+        <span>Accueil</span>
+      </a>
+      <a href="categories.html" class="nav-item" aria-label="Catégories">
+        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <rect x="3" y="3" width="7" height="7"></rect>
+          <rect x="14" y="3" width="7" height="7"></rect>
+          <rect x="14" y="14" width="7" height="7"></rect>
+          <rect x="3" y="14" width="7" height="7"></rect>
+        </svg>
+        <span>Catégories</span>
+      </a>
+      <button class="nav-item" id="nav-search-btn" aria-label="Rechercher">
+        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <circle cx="11" cy="11" r="8"></circle>
+          <path d="m21 21-4.35-4.35"></path>
+        </svg>
+        <span>Recherche</span>
+      </button>
+      <a href="favorites.html" class="nav-item" aria-label="Favoris" style="position: relative;">
+        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path>
+        </svg>
+        <span>Favoris</span>
+        <span id="nav-favorite-count" class="nav-badge" style="display: none;">0</span>
+      </a>
+    </nav>
+
     <!-- Bouton flottant WhatsApp -->
     <a href="https://wa.me/243866666630?text=Bonjour%2C%20je%20souhaite%20vous%20contacter%20pour%20plus%20d%27informations." 
        class="whatsapp-float" 
@@ -192,9 +267,119 @@
       const searchForm = document.getElementById("search-form");
       const searchInput = document.getElementById("search-input");
       const orderSelect = document.getElementById("order-select");
+      const popularCategoriesGrid = document.getElementById("popular-categories-grid");
 
       let lastQuery = "";
       const globalLoader = document.getElementById("global-loader");
+
+      // ====== Gestion des Favoris (localStorage) ======
+      const FAVORITES_KEY = "ush_favorites";
+
+      // Récupérer les favoris depuis localStorage
+      function getFavorites() {
+        try {
+          const favorites = localStorage.getItem(FAVORITES_KEY);
+          return favorites ? JSON.parse(favorites) : [];
+        } catch (err) {
+          console.error("Erreur lors de la récupération des favoris:", err);
+          return [];
+        }
+      }
+
+      // Sauvegarder les favoris dans localStorage
+      function saveFavorites(favorites) {
+        try {
+          localStorage.setItem(FAVORITES_KEY, JSON.stringify(favorites));
+        } catch (err) {
+          console.error("Erreur lors de la sauvegarde des favoris:", err);
+        }
+      }
+
+      // Vérifier si un produit est en favoris
+      function isFavorite(productId) {
+        const favorites = getFavorites();
+        return favorites.includes(productId);
+      }
+
+      // Ajouter ou retirer un produit des favoris
+      function toggleFavorite(productId) {
+        const favorites = getFavorites();
+        const index = favorites.indexOf(productId);
+        
+        if (index > -1) {
+          // Retirer des favoris
+          favorites.splice(index, 1);
+          showFavoriteNotification("Produit retiré des favoris", false);
+        } else {
+          // Ajouter aux favoris
+          favorites.push(productId);
+          showFavoriteNotification("Produit ajouté aux favoris", true);
+        }
+        
+        saveFavorites(favorites);
+        return favorites.includes(productId);
+      }
+
+      // Mettre à jour l'icône favoris
+      function updateFavoriteIcon(button, productId) {
+        const icon = button.querySelector(".favorite-icon");
+        if (isFavorite(productId)) {
+          button.classList.add("active");
+          icon.setAttribute("fill", "#ef4444");
+          icon.setAttribute("stroke", "#ef4444");
+          button.setAttribute("aria-label", "Retirer des favoris");
+        } else {
+          button.classList.remove("active");
+          icon.setAttribute("fill", "none");
+          icon.setAttribute("stroke", "currentColor");
+          button.setAttribute("aria-label", "Ajouter aux favoris");
+        }
+      }
+
+      // Mettre à jour le compteur de favoris
+      function updateFavoriteCount() {
+        const favorites = getFavorites();
+        const count = favorites.length;
+        
+        // Mettre à jour le badge dans le header si présent
+        const favoriteBadge = document.getElementById("favorite-count-badge");
+        if (favoriteBadge) {
+          favoriteBadge.textContent = count > 0 ? count : "";
+          favoriteBadge.style.display = count > 0 ? "flex" : "none";
+        }
+
+        // Mettre à jour le badge dans le menu mobile
+        const navFavoriteBadge = document.getElementById("nav-favorite-count");
+        if (navFavoriteBadge) {
+          navFavoriteBadge.textContent = count > 0 ? count : "";
+          navFavoriteBadge.style.display = count > 0 ? "flex" : "none";
+        }
+      }
+
+      // Afficher une notification pour les favoris
+      function showFavoriteNotification(message, isAdded) {
+        // Créer ou récupérer le conteneur de notification
+        let notification = document.getElementById("favorite-notification");
+        if (!notification) {
+          notification = document.createElement("div");
+          notification.id = "favorite-notification";
+          notification.className = "favorite-notification";
+          document.body.appendChild(notification);
+        }
+
+        notification.textContent = message;
+        notification.className = `favorite-notification ${isAdded ? "added" : "removed"}`;
+        notification.style.display = "block";
+
+        // Masquer après 2 secondes
+        setTimeout(() => {
+          notification.style.opacity = "0";
+          setTimeout(() => {
+            notification.style.display = "none";
+            notification.style.opacity = "1";
+          }, 300);
+        }, 2000);
+      }
 
       function showLoader(show) {
         loaderEl.classList.toggle("hidden", !show);
@@ -270,8 +455,7 @@
 
       function renderProducts(products) {
         if (!products || products.length === 0) {
-          productsGrid.innerHTML =
-            "<p>Aucun produit trouvé pour ces critères.</p>";
+          productsGrid.innerHTML = `<p>${t("no.products")}</p>`;
           return;
         }
 
@@ -323,6 +507,32 @@
             badge.textContent = `-${discountPercentage}%`;
             article.appendChild(badge);
           }
+
+          // Bouton Favoris
+          const favoriteBtn = document.createElement("button");
+          favoriteBtn.className = "product-favorite-btn";
+          favoriteBtn.setAttribute("aria-label", "Ajouter aux favoris");
+          favoriteBtn.setAttribute("data-product-id", product.id);
+          favoriteBtn.addEventListener("click", (e) => {
+            e.stopPropagation(); // Empêcher le clic sur la carte
+            toggleFavorite(product.id);
+            updateFavoriteIcon(favoriteBtn, product.id);
+            updateFavoriteCount();
+          });
+          
+          const favoriteIcon = document.createElement("svg");
+          favoriteIcon.className = "favorite-icon";
+          favoriteIcon.setAttribute("viewBox", "0 0 24 24");
+          favoriteIcon.setAttribute("fill", "none");
+          favoriteIcon.setAttribute("stroke", "currentColor");
+          favoriteIcon.setAttribute("stroke-width", "2");
+          favoriteIcon.innerHTML = '<path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path>';
+          
+          favoriteBtn.appendChild(favoriteIcon);
+          article.appendChild(favoriteBtn);
+          
+          // Mettre à jour l'icône selon l'état initial
+          updateFavoriteIcon(favoriteBtn, product.id);
 
           // Catégorie
           let categoryName = "";
@@ -406,19 +616,103 @@
         fetchProducts(searchInput.value);
       });
 
+      // Gestion du tri
+      orderSelect.addEventListener("change", () => {
+        const selectedValue = orderSelect.value;
+        fetchProductsWithSort(lastQuery, selectedValue);
+      });
+
+      // Fonction pour récupérer les produits avec tri
+      async function fetchProductsWithSort(query = "", sortBy = "default") {
+        try {
+          lastQuery = query;
+          showError("");
+          showLoader(true);
+          productsGrid.innerHTML = "";
+
+          const controller = new AbortController();
+          const timeoutId = setTimeout(() => controller.abort(), 10000);
+
+          const url = new URL(API_URL);
+          if (query.trim()) {
+            url.searchParams.set("search", query.trim());
+          }
+
+          const res = await fetch(url.toString(), { signal: controller.signal });
+          clearTimeout(timeoutId);
+
+          if (!res.ok) {
+            throw new Error(`Erreur HTTP : ${res.status}`);
+          }
+
+          let products = await res.json();
+
+          // Trier les produits côté client
+          if (sortBy !== "default") {
+            products = products.sort((a, b) => {
+              const priceA = a.prices?.price ? parseInt(a.prices.price, 10) : 0;
+              const priceB = b.prices?.price ? parseInt(b.prices.price, 10) : 0;
+              
+              switch (sortBy) {
+                case "price_asc":
+                  return priceA - priceB;
+                case "price_desc":
+                  return priceB - priceA;
+                case "date_desc":
+                  // Trier par date (les plus récents en premier)
+                  const dateA = a.date_created ? new Date(a.date_created) : new Date(0);
+                  const dateB = b.date_created ? new Date(b.date_created) : new Date(0);
+                  return dateB - dateA;
+                default:
+                  return 0;
+              }
+            });
+          }
+
+          renderProducts(products);
+        } catch (err) {
+          console.error(err);
+          let friendlyMessage = "Impossible de charger les produits.";
+
+          if (err.name === "AbortError") {
+            friendlyMessage =
+              "Le serveur met trop de temps à répondre. Vérifiez votre connexion puis réessayez.";
+          } else if (
+            err.message.includes("Failed to fetch") ||
+            err.message.includes("NetworkError")
+          ) {
+            friendlyMessage =
+              "Problème de connexion réseau ou le site USH est momentanément indisponible.";
+          }
+
+          const fullMessage = `${friendlyMessage}<br /><small>Détail technique : ${err.message}</small><br /><button id="retry-btn" class="product-button" type="button">Réessayer</button>`;
+
+          showError(fullMessage);
+
+          const retryBtn = document.getElementById("retry-btn");
+          if (retryBtn) {
+            retryBtn.addEventListener("click", () => {
+              fetchProductsWithSort(lastQuery, orderSelect.value);
+            });
+          }
+        } finally {
+          showLoader(false);
+        }
+      }
+
       // Horaires d'ouverture
       function renderOpeningHours() {
         const hoursList = document.getElementById("opening-hours-list");
         if (!hoursList) return;
 
         const openingHours = [
-          { day: "Lundi", hours: "08h00 - 17h00", isToday: false },
-          { day: "Mardi", hours: "08h00 - 17h00", isToday: false },
-          { day: "Mercredi", hours: "08h00 - 17h00", isToday: false },
-          { day: "Jeudi", hours: "08h00 - 17h00", isToday: false },
-          { day: "Vendredi", hours: "08h00 - 17h00", isToday: false },
-          { day: "Samedi", hours: "08h00 - 17h00", isToday: false },
-          { day: "Dimanche", hours: "Fermé", isToday: false, isClosed: true },
+          { day: t("day.monday"), hours: "08h00 - 17h00", isToday: false },
+          { day: t("day.tuesday"), hours: "08h00 - 17h00", isToday: false },
+          { day: t("day.wednesday"), hours: "08h00 - 17h00", isToday: false },
+          { day: t("day.thursday"), hours: "08h00 - 17h00", isToday: false },
+          { day: t("day.friday"), hours: "08h00 - 17h00", isToday: false },
+          { day: t("day.saturday"), hours: "08h00 - 17h00", isToday: false },
+          { day: t("day.sunday"), hours: currentLanguage === "fr" ? "Fermé" : "Closed", isToday: false, isClosed: true },
         ];
 
         // Déterminer le jour actuel
@@ -434,7 +728,7 @@
             }">
             <span class="opening-hours-day">${item.day}</span>
             <span class="opening-hours-time">${item.hours}</span>
-            ${item.isToday ? '<span class="opening-hours-badge">Aujourd\'hui</span>' : ""}
+            ${item.isToday ? `<span class="opening-hours-badge">${t("today")}</span>` : ""}
           </div>
         `
           )
@@ -500,11 +794,380 @@
         }
       }
 
-      // Chargement initial
+      // Fonction pour charger et afficher les catégories populaires
+      async function fetchPopularCategories() {
+        try {
+          const res = await fetch("https://shopushindi.com/wp-json/wc/store/v1/products?per_page=100");
+          if (!res.ok) return;
+          
+          const products = await res.json();
+          
+          // Compter les produits par catégorie
+          const categoryCounts = {};
+          products.forEach((product) => {
+            if (product.categories && product.categories.length > 0) {
+              product.categories.forEach((category) => {
+                if (!categoryCounts[category.name]) {
+                  categoryCounts[category.name] = {
+                    name: category.name,
+                    count: 0,
+                    id: category.id
+                  };
+                }
+                categoryCounts[category.name].count++;
+              });
+            }
+          });
+
+          // Trier par nombre de produits et prendre les 4 premières
+          const sortedCategories = Object.values(categoryCounts)
+            .sort((a, b) => b.count - a.count)
+            .slice(0, 4);
+
+          // Icônes pour les catégories
+          const categoryIcons = {
+            "Phones": "📱",
+            "Smartphones": "📱",
+            "Téléphones": "📱",
+            "TVs": "📺",
+            "Téléviseurs": "📺",
+            "Laptops": "💻",
+            "Ordinateurs": "💻",
+            "Tablets": "📱",
+            "Tablettes": "📱",
+            "Audio": "🎧",
+            "Casques": "🎧"
+          };
+
+          // Rendre les cartes de catégories
+          popularCategoriesGrid.innerHTML = sortedCategories.map((cat) => {
+            const icon = categoryIcons[cat.name] || "📦";
+            const categoryUrl = `categories.html?category=${encodeURIComponent(cat.name)}`;
+            return `
+              <div class="popular-cat-card" onclick="window.location.href='${categoryUrl}'">
+                <div class="popular-cat-icon">${icon}</div>
+                <h3>${cat.name}</h3>
+                <p class="popular-cat-stats">${cat.count} <span>${t("products")}</span></p>
+              </div>
+            `;
+          }).join("");
+        } catch (err) {
+          console.error("Erreur lors du chargement des catégories:", err);
+        }
+      }
+
+      // Gestion du menu de navigation mobile
+      function updateActiveNavItem() {
+        const currentPage = window.location.pathname.split('/').pop() || 'index.html';
+        const navItems = document.querySelectorAll('.bottom-nav .nav-item');
+        
+        navItems.forEach((item) => {
+          item.classList.remove('active');
+          const href = item.getAttribute('href');
+          if (href && (href === currentPage || (currentPage === '' && href === 'index.html'))) {
+            item.classList.add('active');
+          }
+        });
+        
+        // Marquer "Accueil" comme actif si on est sur index.html
+        if (currentPage === 'index.html' || currentPage === '') {
+          const homeItem = document.querySelector('.bottom-nav .nav-item[href="index.html"]');
+          if (homeItem) {
+            homeItem.classList.add('active');
+          }
+        }
+      }
+
+      // Gestion du bouton recherche dans le menu mobile
+      const navSearchBtn = document.getElementById('nav-search-btn');
+      if (navSearchBtn) {
+        navSearchBtn.addEventListener('click', () => {
+          const searchInput = document.getElementById('search-input');
+          if (searchInput) {
+            searchInput.focus();
+            searchInput.scrollIntoView({ behavior: 'smooth', block: 'center' });
+          }
+        });
+      }
+
+      // ====== Gestion de la Langue ======
+      const LANGUAGE_KEY = "ush_language";
+      let currentLanguage = "fr"; // Par défaut français
+
+      // Traductions
+      const translations = {
+        fr: {
+          // Navigation
+          "nav.home": "Accueil",
+          "nav.categories": "Catégories",
+          "nav.services": "Services",
+          "nav.about": "À propos",
+          "nav.search": "Rechercher",
+          "nav.favorites": "Favoris",
+          "nav.cart": "Panier",
+          // Page principale
+          "popular.categories": "Catégories populaires",
+          "popular.subtitle": "Découvrez nos catégories les plus demandées",
+          "all.categories": "Toutes les catégories",
+          "products": "produits",
+          "sort.by": "Trier par",
+          "sort.default": "Par défaut",
+          "sort.price.asc": "Prix croissant",
+          "sort.price.desc": "Prix décroissant",
+          "sort.date.desc": "Plus récents",
+          "loading": "Chargement de la boutique…",
+          "no.products": "Aucun produit trouvé pour ces critères.",
+          "quote.title": "Besoin d'un devis personnalisé ?",
+          "quote.text": "Contactez-nous pour obtenir un devis sur mesure pour vos besoins. Notre équipe est à votre disposition pour vous conseiller.",
+          "quote.button": "Demander un devis",
+          "opening.hours": "Horaires d'ouverture",
+          "today": "Aujourd'hui",
+          "closed": "Fermé",
+          // Jours
+          "day.monday": "Lundi",
+          "day.tuesday": "Mardi",
+          "day.wednesday": "Mercredi",
+          "day.thursday": "Jeudi",
+          "day.friday": "Vendredi",
+          "day.saturday": "Samedi",
+          "day.sunday": "Dimanche"
+        },
+        en: {
+          // Navigation
+          "nav.home": "Home",
+          "nav.categories": "Categories",
+          "nav.services": "Services",
+          "nav.about": "About",
+          "nav.search": "Search",
+          "nav.favorites": "Favorites",
+          "nav.cart": "Cart",
+          // Page principale
+          "popular.categories": "Popular Categories",
+          "popular.subtitle": "Discover our most requested categories",
+          "all.categories": "All categories",
+          "products": "products",
+          "sort.by": "Sort by",
+          "sort.default": "Default",
+          "sort.price.asc": "Price ascending",
+          "sort.price.desc": "Price descending",
+          "sort.date.desc": "Most recent",
+          "loading": "Loading store…",
+          "no.products": "No products found for these criteria.",
+          "quote.title": "Need a personalized quote?",
+          "quote.text": "Contact us to get a custom quote for your needs. Our team is available to advise you.",
+          "quote.button": "Request a quote",
+          "opening.hours": "Opening Hours",
+          "today": "Today",
+          "closed": "Closed",
+          // Jours
+          "day.monday": "Monday",
+          "day.tuesday": "Tuesday",
+          "day.wednesday": "Wednesday",
+          "day.thursday": "Thursday",
+          "day.friday": "Friday",
+          "day.saturday": "Saturday",
+          "day.sunday": "Sunday"
+        }
+      };
+
+      // Récupérer la langue sauvegardée
+      function getSavedLanguage() {
+        try {
+          const saved = localStorage.getItem(LANGUAGE_KEY);
+          return saved; // Retourne null si pas de valeur
+        } catch (err) {
+          return null;
+        }
+      }
+
+      // Sauvegarder la langue
+      function saveLanguage(lang) {
+        try {
+          localStorage.setItem(LANGUAGE_KEY, lang);
+        } catch (err) {
+          console.error("Erreur lors de la sauvegarde de la langue:", err);
+        }
+      }
+
+      // Traduire un texte
+      function t(key) {
+        return translations[currentLanguage][key] || translations.fr[key] || key;
+      }
+
+      // Mettre à jour le drapeau du bouton de langue
+      function updateLanguageButton() {
+        const languageToggle = document.getElementById("language-toggle");
+        const languageFlag = document.getElementById("language-flag");
+        if (languageToggle && languageFlag) {
+          languageFlag.textContent = currentLanguage === "fr" ? "🇬🇧" : "🇫🇷";
+          languageToggle.setAttribute("title", currentLanguage === "fr" ? "Switch to English" : "Passer en français");
+          languageToggle.setAttribute("aria-label", currentLanguage === "fr" ? "Switch to English" : "Passer en français");
+        }
+      }
+
+      // Appliquer les traductions
+      function applyTranslations() {
+        // Navigation
+        const navLinks = document.querySelectorAll('.nav-link');
+        if (navLinks.length >= 4) {
+          navLinks[0].textContent = t("nav.home");
+          navLinks[1].textContent = t("nav.categories");
+          navLinks[2].textContent = t("nav.services");
+          navLinks[3].textContent = t("nav.about");
+        }
+        
+        // Mettre à jour le bouton de langue
+        updateLanguageButton();
+
+        // Menu mobile
+        const bottomNavItems = document.querySelectorAll('.bottom-nav .nav-item span');
+        bottomNavItems.forEach((item, index) => {
+          const texts = [t("nav.home"), t("nav.categories"), t("nav.search"), t("nav.favorites")];
+          if (texts[index]) item.textContent = texts[index];
+        });
+
+        // Autres éléments
+        const searchInput = document.getElementById("search-input");
+        if (searchInput) searchInput.placeholder = t("nav.search");
+
+        const loaderText = document.getElementById("loader-text");
+        if (loaderText) loaderText.textContent = t("loading");
+
+        // Sections
+        const popularTitle = document.getElementById("popular-categories-title");
+        if (popularTitle) popularTitle.textContent = t("popular.categories");
+
+        const popularSubtitle = document.getElementById("popular-categories-subtitle");
+        if (popularSubtitle) popularSubtitle.textContent = t("popular.subtitle");
+
+        const allCatsBtn = document.getElementById("all-cats-btn");
+        if (allCatsBtn) allCatsBtn.textContent = t("all.categories");
+
+        const sortLabel = document.getElementById("sort-label");
+        if (sortLabel) sortLabel.textContent = t("sort.by");
+
+        const sortDefault = document.getElementById("sort-default");
+        if (sortDefault) sortDefault.textContent = t("sort.default");
+
+        const sortPriceAsc = document.getElementById("sort-price-asc");
+        if (sortPriceAsc) sortPriceAsc.textContent = t("sort.price.asc");
+
+        const sortPriceDesc = document.getElementById("sort-price-desc");
+        if (sortPriceDesc) sortPriceDesc.textContent = t("sort.price.desc");
+
+        const sortDateDesc = document.getElementById("sort-date-desc");
+        if (sortDateDesc) sortDateDesc.textContent = t("sort.date.desc");
+
+        const quoteTitle = document.getElementById("quote-title");
+        if (quoteTitle) quoteTitle.textContent = t("quote.title");
+
+        const quoteText = document.getElementById("quote-text");
+        if (quoteText) quoteText.textContent = t("quote.text");
+
+        const quoteButtonText = document.getElementById("quote-button-text");
+        if (quoteButtonText) quoteButtonText.textContent = t("quote.button");
+
+        const openingHoursTitle = document.getElementById("opening-hours-title");
+        if (openingHoursTitle) openingHoursTitle.textContent = t("opening.hours");
+
+        // Mettre à jour l'attribut lang du HTML
+        document.documentElement.lang = currentLanguage;
+      }
+
+      // Afficher la modal de sélection de langue
+      function showLanguageModal() {
+        const languageModal = document.getElementById("language-modal");
+        if (languageModal) {
+          languageModal.classList.remove("hidden");
+          document.body.style.overflow = "hidden";
+        }
+      }
+
+      // Masquer la modal de sélection de langue
+      function hideLanguageModal() {
+        const languageModal = document.getElementById("language-modal");
+        if (languageModal) {
+          languageModal.classList.add("hidden");
+          document.body.style.overflow = "";
+        }
+      }
+
+      // Changer de langue
+      function changeLanguage(lang) {
+        currentLanguage = lang;
+        saveLanguage(lang);
+        applyTranslations();
+        hideLanguageModal();
+        
+        // Recharger les éléments dynamiques
+        renderOpeningHours();
+        
+        // Charger les données après le choix de la langue
+        fetchPopularCategories();
+        fetchProducts();
+        checkChristmasPeriod();
+        updateActiveNavItem();
+        updateFavoriteCount();
+      }
+
+      // Toggle de langue via le bouton
+      function toggleLanguage() {
+        const newLang = currentLanguage === "fr" ? "en" : "fr";
+        changeLanguage(newLang);
+      }
+
+      // Vérifier si c'est la première visite
+      function checkFirstVisit() {
+        const savedLanguage = getSavedLanguage();
+        const languageModal = document.getElementById("language-modal");
+        
+        if (!savedLanguage || savedLanguage === "null" || savedLanguage === "") {
+          // Première visite - afficher la modal
+          currentLanguage = "fr"; // Par défaut
+          if (languageModal) {
+            languageModal.classList.remove("hidden");
+            showLanguageModal();
+          }
+        } else {
+          // Langue déjà choisie - masquer la modal et appliquer les traductions
+          currentLanguage = savedLanguage;
+          if (languageModal) {
+            languageModal.classList.add("hidden");
+          }
+          applyTranslations();
+        }
+      }
+
+      // Gestion des boutons de langue
       document.addEventListener("DOMContentLoaded", () => {
+        // Vérifier et initialiser la langue
+        checkFirstVisit();
+        
+        // Gérer le bouton de toggle de langue dans l'appbar
+        const languageToggle = document.getElementById("language-toggle");
+        if (languageToggle) {
+          languageToggle.addEventListener("click", toggleLanguage);
+        }
+        
+        // Gérer les clics sur les boutons de langue dans la modal
+        const languageButtons = document.querySelectorAll(".language-option");
+        languageButtons.forEach((button) => {
+          button.addEventListener("click", () => {
+            const lang = button.getAttribute("data-lang");
+            changeLanguage(lang);
+          });
+        });
+
+        // Charger les données (seulement si la modal n'est pas affichée)
+        const languageModal = document.getElementById("language-modal");
+        if (languageModal && languageModal.classList.contains("hidden")) {
+          fetchPopularCategories();
         fetchProducts();
         renderOpeningHours();
         checkChristmasPeriod();
+          updateActiveNavItem();
+          updateFavoriteCount();
+        }
       });
     </script>
   </body>

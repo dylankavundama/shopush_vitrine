@@ -6,8 +6,21 @@
     <title>Nos Services – USH</title>
     <link rel="icon" type="image/png" href="assets/logo.png" />
     <link rel="stylesheet" href="styles.css" />
+    <script>
+      // Afficher le loader immédiatement (avant le chargement du DOM)
+      (function() {
+        document.addEventListener('DOMContentLoaded', function() {
+          const loader = document.getElementById('global-loader');
+          if (loader) loader.style.display = 'flex';
+        });
+      })();
+    </script>
   </head>
   <body>
+    <div id="global-loader" class="loader-overlay" style="display: flex;">
+      <div class="loader-spinner"></div>
+      <p>Chargement…</p>
+    </div>
     <header class="header">
       <div class="container header-inner">
         <nav class="header-nav">
@@ -37,6 +50,9 @@
               </svg>
             </button>
           </form>
+          <button id="language-toggle" class="language-toggle" aria-label="Changer de langue" title="Changer de langue">
+            <span id="language-flag">🇫🇷</span>
+          </button>
           <a href="https://wa.me/243866666630" class="cart-icon" aria-label="Panier">
             <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
               <path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"></path>
@@ -216,14 +232,119 @@
   </footer>
 
   <script>
+    // Gestion du loader global
+    const globalLoader = document.getElementById("global-loader");
+    
     // Gestion du bouton WhatsApp
+    // ====== Gestion de la Langue ======
+    const LANGUAGE_KEY = "ush_language";
+    let currentLanguage = getSavedLanguage() || "fr";
+
+    const translations = {
+      fr: {
+        "nav.home": "Accueil",
+        "nav.categories": "Catégories",
+        "nav.services": "Services",
+        "nav.about": "À propos",
+        "nav.search": "Rechercher",
+        "nav.favorites": "Favoris",
+        "nav.cart": "Panier"
+      },
+      en: {
+        "nav.home": "Home",
+        "nav.categories": "Categories",
+        "nav.services": "Services",
+        "nav.about": "About",
+        "nav.search": "Search",
+        "nav.favorites": "Favorites",
+        "nav.cart": "Cart"
+      }
+    };
+
+    function getSavedLanguage() {
+      try {
+        return localStorage.getItem(LANGUAGE_KEY) || "fr";
+      } catch (err) {
+        return "fr";
+      }
+    }
+
+    function saveLanguage(lang) {
+      try {
+        localStorage.setItem(LANGUAGE_KEY, lang);
+      } catch (err) {
+        console.error("Erreur lors de la sauvegarde de la langue:", err);
+      }
+    }
+
+    function t(key) {
+      return translations[currentLanguage][key] || translations.fr[key] || key;
+    }
+
+    function updateLanguageButton() {
+      const languageToggle = document.getElementById("language-toggle");
+      const languageFlag = document.getElementById("language-flag");
+      if (languageToggle && languageFlag) {
+        languageFlag.textContent = currentLanguage === "fr" ? "🇬🇧" : "🇫🇷";
+        languageToggle.setAttribute("title", currentLanguage === "fr" ? "Switch to English" : "Passer en français");
+        languageToggle.setAttribute("aria-label", currentLanguage === "fr" ? "Switch to English" : "Passer en français");
+      }
+    }
+
+    function applyTranslations() {
+      const navLinks = document.querySelectorAll('.nav-link');
+      if (navLinks.length >= 4) {
+        navLinks[0].textContent = t("nav.home");
+        navLinks[1].textContent = t("nav.categories");
+        navLinks[2].textContent = t("nav.services");
+        navLinks[3].textContent = t("nav.about");
+      }
+
+      const searchInput = document.getElementById("search-input");
+      if (searchInput) searchInput.placeholder = t("nav.search");
+
+      const bottomNavItems = document.querySelectorAll('.bottom-nav .nav-item span');
+      bottomNavItems.forEach((item, index) => {
+        const texts = [t("nav.home"), t("nav.categories"), t("nav.search"), t("nav.favorites"), t("nav.cart")];
+        if (texts[index]) item.textContent = texts[index];
+      });
+
+      updateLanguageButton();
+      document.documentElement.lang = currentLanguage;
+    }
+
+    function toggleLanguage() {
+      const newLang = currentLanguage === "fr" ? "en" : "fr";
+      currentLanguage = newLang;
+      saveLanguage(newLang);
+      applyTranslations();
+    }
+
     document.addEventListener("DOMContentLoaded", () => {
+      // Initialiser la langue
+      currentLanguage = getSavedLanguage() || "fr";
+      applyTranslations();
+
+      // Gérer le bouton de toggle de langue
+      const languageToggle = document.getElementById("language-toggle");
+      if (languageToggle) {
+        languageToggle.addEventListener("click", toggleLanguage);
+      }
+
+      // Masquer le loader après le chargement
+      if (globalLoader) {
+        setTimeout(() => {
+          globalLoader.classList.add("hidden");
+        }, 300);
+      }
       const whatsappButton = document.getElementById("whatsapp-cta");
       if (whatsappButton) {
         whatsappButton.addEventListener("click", () => {
           const phoneNumber = "243866666630";
           const message = encodeURIComponent(
-            "Bonjour, je souhaite en savoir plus sur vos services. Merci de me contacter."
+            currentLanguage === "fr" 
+              ? "Bonjour, je souhaite en savoir plus sur vos services. Merci de me contacter."
+              : "Hello, I would like to know more about your services. Please contact me."
           );
           window.open(
             `https://wa.me/${phoneNumber}?text=${message}`,

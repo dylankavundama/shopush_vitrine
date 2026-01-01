@@ -1,0 +1,562 @@
+<!DOCTYPE html>
+<html lang="fr">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Mes Favoris – USH</title>
+    <link rel="icon" type="image/png" href="assets/logo.png" />
+    <link rel="stylesheet" href="styles.css" />
+    <script>
+      // Afficher le loader immédiatement (avant le chargement du DOM)
+      (function() {
+        document.addEventListener('DOMContentLoaded', function() {
+          const loader = document.getElementById('global-loader');
+          if (loader) loader.style.display = 'flex';
+        });
+      })();
+    </script>
+  </head>
+  <body>
+    <div id="global-loader" class="loader-overlay" style="display: flex;">
+      <div class="loader-spinner"></div>
+      <p>Chargement de vos favoris…</p>
+    </div>
+    <header class="header">
+      <div class="container header-inner">
+        <nav class="header-nav">
+          <a href="index.html" class="nav-link">Accueil</a>
+          <a href="categories.html" class="nav-link">Catégories</a>
+          <a href="services.html" class="nav-link">Services</a>
+          <a href="about.html" class="nav-link">À propos</a>
+        </nav>
+        <div class="brand">
+          <a href="index.html" style="text-decoration: none; color: inherit; display: flex; align-items: center; gap: 0.5rem;">
+            <img src="assets/logo.png" alt="USH Logo" class="brand-logo" />
+            <span id="christmas-icon" class="christmas-icon hidden" aria-label="Joyeux Noël">🎅</span>
+          </a>
+        </div>
+        <div class="header-actions">
+          <form id="search-form" class="search-form" onsubmit="event.preventDefault(); window.location.href='index.html?search=' + encodeURIComponent(document.getElementById('search-input').value);">
+            <input
+              type="search"
+              id="search-input"
+              placeholder="Rechercher"
+              aria-label="Rechercher un produit"
+            />
+            <button type="submit" class="search-button" aria-label="Rechercher">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="11" cy="11" r="8"></circle>
+                <path d="m21 21-4.35-4.35"></path>
+              </svg>
+            </button>
+          </form>
+          <button id="language-toggle" class="language-toggle" aria-label="Changer de langue" title="Changer de langue">
+            <span id="language-flag">🇫🇷</span>
+          </button>
+          <a href="favorites.html" class="cart-icon active" aria-label="Favoris" style="position: relative;">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="2">
+              <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path>
+            </svg>
+            <span id="favorite-count-badge" class="cart-badge" style="display: none;">0</span>
+          </a>
+        </div>
+      </div>
+    </header>
+
+    <main class="main">
+      <section class="favorites-section container">
+        <div class="favorites-hero">
+          <h1 class="favorites-title">Mes Favoris</h1>
+          <p class="favorites-subtitle" id="favorites-count">0 produit(s) en favoris</p>
+        </div>
+
+        <div id="favorites-grid" class="products-grid">
+          <div id="loader" class="loader hidden">Chargement de vos favoris…</div>
+          <div id="error" class="error hidden"></div>
+          <div id="empty-favorites" class="empty-favorites hidden">
+            <div class="empty-icon">❤️</div>
+            <h2>Aucun favori pour le moment</h2>
+            <p>Commencez à ajouter des produits à vos favoris en cliquant sur l'icône ❤️</p>
+            <a href="index.html" class="product-button">Découvrir nos produits</a>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <footer class="footer">
+      <div class="container footer-inner">
+        <div class="footer-column">
+          <h3><img src="assets/logo.png" alt="USH" style="height: 24px; width: auto;" /></h3>
+          <p>Votre boutique en ligne de téléphones, ordinateurs, TV, audio et accessoires.</p>
+          <p>
+            Propulsé par
+            <a href="https://shopushindi.com/" target="_blank" rel="noreferrer"
+              >shopushindi.com</a
+            >
+            via l'API WooCommerce.
+          </p>
+        </div>
+        <div class="footer-column">
+          <h4>Catégories</h4>
+          <ul>
+            <li><a href="categories.html">Phones &amp; Accessoires</a></li>
+            <li><a href="categories.html">Ordinateurs &amp; Accessoires</a></li>
+            <li><a href="categories.html">Audio &amp; Casques</a></li>
+            <li><a href="categories.html">Tablettes &amp; TV</a></li>
+          </ul>
+        </div>
+        <div class="footer-column">
+          <h4>Contact</h4>
+          <p>Butembo, Congo DRC<br />Av. du Centre, CETRACA Bldg</p>
+          <p>Tél : <a href="tel:+24386666630">+243 866 666 630</a></p>
+          <p>
+            Email :
+            <a href="mailto:info@shopushindi.com">info@shopushindi.com</a>
+          </p>
+        </div>
+      </div>
+    </footer>
+
+    <!-- Menu de navigation mobile -->
+    <nav class="bottom-nav" id="bottom-nav">
+      <a href="index.html" class="nav-item" aria-label="Accueil">
+        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
+          <polyline points="9 22 9 12 15 12 15 22"></polyline>
+        </svg>
+        <span>Accueil</span>
+      </a>
+      <a href="categories.html" class="nav-item" aria-label="Catégories">
+        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <rect x="3" y="3" width="7" height="7"></rect>
+          <rect x="14" y="3" width="7" height="7"></rect>
+          <rect x="14" y="14" width="7" height="7"></rect>
+          <rect x="3" y="14" width="7" height="7"></rect>
+        </svg>
+        <span>Catégories</span>
+      </a>
+      <button class="nav-item" id="nav-search-btn" aria-label="Rechercher">
+        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <circle cx="11" cy="11" r="8"></circle>
+          <path d="m21 21-4.35-4.35"></path>
+        </svg>
+        <span>Recherche</span>
+      </button>
+      <a href="favorites.html" class="nav-item active" aria-label="Favoris" style="position: relative;">
+        <svg class="nav-icon" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="2">
+          <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path>
+        </svg>
+        <span>Favoris</span>
+        <span id="nav-favorite-count" class="nav-badge" style="display: none;">0</span>
+      </a>
+    </nav>
+
+    <script>
+      const API_BASE = "https://shopushindi.com/wp-json/wc/store/v1";
+      const FAVORITES_KEY = "ush_favorites";
+      const favoritesGrid = document.getElementById("favorites-grid");
+      const loaderEl = document.getElementById("loader");
+      const errorEl = document.getElementById("error");
+      const emptyFavorites = document.getElementById("empty-favorites");
+      const favoritesCount = document.getElementById("favorites-count");
+      const globalLoader = document.getElementById("global-loader");
+
+      function getFavorites() {
+        try {
+          const favorites = localStorage.getItem(FAVORITES_KEY);
+          return favorites ? JSON.parse(favorites) : [];
+        } catch (err) {
+          return [];
+        }
+      }
+
+      function saveFavorites(favorites) {
+        try {
+          localStorage.setItem(FAVORITES_KEY, JSON.stringify(favorites));
+        } catch (err) {
+          console.error("Erreur lors de la sauvegarde:", err);
+        }
+      }
+
+      function isFavorite(productId) {
+        const favorites = getFavorites();
+        return favorites.includes(productId);
+      }
+
+      function toggleFavorite(productId) {
+        const favorites = getFavorites();
+        const index = favorites.indexOf(productId);
+        
+        if (index > -1) {
+          favorites.splice(index, 1);
+        } else {
+          favorites.push(productId);
+        }
+        
+        saveFavorites(favorites);
+        loadFavorites();
+        updateFavoriteCount();
+        return favorites.includes(productId);
+      }
+
+      function updateFavoriteIcon(button, productId) {
+        const icon = button.querySelector(".favorite-icon");
+        if (isFavorite(productId)) {
+          button.classList.add("active");
+          icon.setAttribute("fill", "#ef4444");
+          icon.setAttribute("stroke", "#ef4444");
+        } else {
+          button.classList.remove("active");
+          icon.setAttribute("fill", "none");
+          icon.setAttribute("stroke", "currentColor");
+        }
+      }
+
+      function updateFavoriteCount() {
+        const favorites = getFavorites();
+        const count = favorites.length;
+        
+        if (favoritesCount) {
+          favoritesCount.textContent = `${count} produit${count > 1 ? 's' : ''} en favoris`;
+        }
+
+        const favoriteBadge = document.getElementById("favorite-count-badge");
+        if (favoriteBadge) {
+          favoriteBadge.textContent = count > 0 ? count : "";
+          favoriteBadge.style.display = count > 0 ? "flex" : "none";
+        }
+
+        const navFavoriteBadge = document.getElementById("nav-favorite-count");
+        if (navFavoriteBadge) {
+          navFavoriteBadge.textContent = count > 0 ? count : "";
+          navFavoriteBadge.style.display = count > 0 ? "flex" : "none";
+        }
+      }
+
+      function renderProductCard(product) {
+        const article = document.createElement("article");
+        article.className = "product-card";
+        article.addEventListener("click", () => {
+          if (product.id) {
+            window.location.href = `product-detail.html?id=${product.id}`;
+          }
+        });
+
+        // Image
+        const imageWrapper = document.createElement("div");
+        imageWrapper.className = "product-image-wrapper";
+        const img = document.createElement("img");
+        img.className = "product-image";
+        const firstImage = product.images && product.images[0];
+        img.src = (firstImage && firstImage.thumbnail) || (firstImage && firstImage.src) || "https://via.placeholder.com/400x300?text=USH+Produit";
+        img.alt = product.name || "Produit";
+        imageWrapper.appendChild(img);
+
+        // Badge promotion
+        let discountPercentage = 0;
+        const isOnSale = product.on_sale || (product.prices && product.prices.regular_price && product.prices.price && product.prices.regular_price !== product.prices.price);
+        
+        if (isOnSale && product.prices && product.prices.regular_price && product.prices.price) {
+          const regularPrice = parseInt(product.prices.regular_price, 10) / 100;
+          const salePrice = parseInt(product.prices.price, 10) / 100;
+          if (regularPrice > 0) {
+            discountPercentage = Math.round(((regularPrice - salePrice) / regularPrice) * 100);
+          }
+        }
+
+        if (discountPercentage > 0) {
+          const badge = document.createElement("span");
+          badge.className = "badge-sale";
+          badge.textContent = `-${discountPercentage}%`;
+          article.appendChild(badge);
+        }
+
+        // Bouton Favoris
+        const favoriteBtn = document.createElement("button");
+        favoriteBtn.className = "product-favorite-btn";
+        favoriteBtn.setAttribute("aria-label", "Retirer des favoris");
+        favoriteBtn.setAttribute("data-product-id", product.id);
+        favoriteBtn.addEventListener("click", (e) => {
+          e.stopPropagation();
+          toggleFavorite(product.id);
+        });
+        
+        const favoriteIcon = document.createElement("svg");
+        favoriteIcon.className = "favorite-icon";
+        favoriteIcon.setAttribute("viewBox", "0 0 24 24");
+        favoriteIcon.setAttribute("fill", "#ef4444");
+        favoriteIcon.setAttribute("stroke", "#ef4444");
+        favoriteIcon.setAttribute("stroke-width", "2");
+        favoriteIcon.innerHTML = '<path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path>';
+        favoriteBtn.appendChild(favoriteIcon);
+        favoriteBtn.classList.add("active");
+        article.appendChild(favoriteBtn);
+
+        // Catégorie
+        let categoryName = "";
+        if (product.categories && product.categories.length > 0) {
+          categoryName = product.categories[0].name;
+        }
+        const categoryEl = document.createElement("div");
+        categoryEl.className = "product-category";
+        categoryEl.textContent = categoryName || "Produit";
+
+        // Titre
+        const titleEl = document.createElement("h2");
+        titleEl.className = "product-title";
+        titleEl.textContent = product.name;
+
+        // Prix
+        const priceRow = document.createElement("div");
+        priceRow.className = "product-price-row";
+        const priceEl = document.createElement("div");
+        priceEl.className = "product-price";
+
+        let priceDisplay = "";
+        let regularPriceDisplay = "";
+        
+        if (product.prices && product.prices.price && product.prices.currency_code) {
+          const rawPrice = parseInt(product.prices.price, 10) / 100;
+          priceDisplay = `${rawPrice.toFixed(2)} ${product.prices.currency_code}`;
+          
+          if (isOnSale && product.prices.regular_price) {
+            const rawRegularPrice = parseInt(product.prices.regular_price, 10) / 100;
+            regularPriceDisplay = `${rawRegularPrice.toFixed(2)} ${product.prices.currency_code}`;
+          }
+        } else {
+          priceDisplay = "Prix non spécifié";
+        }
+        
+        priceEl.textContent = priceDisplay;
+        priceRow.appendChild(priceEl);
+
+        if (regularPriceDisplay) {
+          const regularPriceEl = document.createElement("div");
+          regularPriceEl.className = "product-price-regular";
+          regularPriceEl.textContent = regularPriceDisplay;
+          priceRow.appendChild(regularPriceEl);
+        }
+
+        // Footer
+        const footer = document.createElement("div");
+        footer.className = "product-footer";
+        const ratingEl = document.createElement("div");
+        ratingEl.className = "product-rating";
+        ratingEl.textContent = "Favori";
+        ratingEl.style.color = "#ef4444";
+        footer.appendChild(ratingEl);
+
+        article.appendChild(imageWrapper);
+        article.appendChild(categoryEl);
+        article.appendChild(titleEl);
+        article.appendChild(priceRow);
+        article.appendChild(footer);
+
+        return article;
+      }
+
+      async function loadFavorites() {
+        const favorites = getFavorites();
+        
+        // Afficher le loader global
+        if (globalLoader) {
+          globalLoader.classList.remove("hidden");
+        }
+        
+        if (favorites.length === 0) {
+          loaderEl.classList.add("hidden");
+          errorEl.classList.add("hidden");
+          emptyFavorites.classList.remove("hidden");
+          favoritesGrid.innerHTML = "";
+          favoritesGrid.appendChild(emptyFavorites);
+          if (globalLoader) {
+            globalLoader.classList.add("hidden");
+          }
+          return;
+        }
+
+        emptyFavorites.classList.add("hidden");
+        loaderEl.classList.remove("hidden");
+        errorEl.classList.add("hidden");
+        favoritesGrid.innerHTML = "";
+
+        try {
+          const fragment = document.createDocumentFragment();
+          let loadedCount = 0;
+
+          for (const productId of favorites) {
+            try {
+              const res = await fetch(`${API_BASE}/products/${productId}`);
+              if (res.ok) {
+                const product = await res.json();
+                fragment.appendChild(renderProductCard(product));
+                loadedCount++;
+              }
+            } catch (err) {
+              console.error(`Erreur pour le produit ${productId}:`, err);
+            }
+          }
+
+          if (loadedCount === 0) {
+            errorEl.textContent = t("favorites.error");
+            errorEl.classList.remove("hidden");
+          } else {
+            favoritesGrid.appendChild(fragment);
+          }
+        } catch (err) {
+          errorEl.textContent = t("favorites.error.loading");
+          errorEl.classList.remove("hidden");
+        } finally {
+          loaderEl.classList.add("hidden");
+          // Masquer le loader global
+          if (globalLoader) {
+            globalLoader.classList.add("hidden");
+          }
+        }
+      }
+
+      // ====== Gestion de la Langue ======
+      const LANGUAGE_KEY = "ush_language";
+      let currentLanguage = getSavedLanguage() || "fr";
+
+      const translations = {
+        fr: {
+          "nav.home": "Accueil",
+          "nav.categories": "Catégories",
+          "nav.services": "Services",
+          "nav.about": "À propos",
+          "nav.search": "Rechercher",
+          "nav.favorites": "Favoris",
+          "nav.cart": "Panier",
+          "favorites.title": "Mes Favoris",
+          "favorites.subtitle": "produit(s) en favoris",
+          "favorites.loading": "Chargement de vos favoris…",
+          "favorites.empty.title": "Aucun favori pour le moment",
+          "favorites.empty.text": "Commencez à ajouter des produits à vos favoris en cliquant sur l'icône ❤️",
+          "favorites.empty.button": "Découvrir nos produits",
+          "favorites.error": "Aucun produit trouvé dans vos favoris.",
+          "favorites.error.loading": "Erreur lors du chargement de vos favoris."
+        },
+        en: {
+          "nav.home": "Home",
+          "nav.categories": "Categories",
+          "nav.services": "Services",
+          "nav.about": "About",
+          "nav.search": "Search",
+          "nav.favorites": "Favorites",
+          "nav.cart": "Cart",
+          "favorites.title": "My Favorites",
+          "favorites.subtitle": "product(s) in favorites",
+          "favorites.loading": "Loading your favorites…",
+          "favorites.empty.title": "No favorites yet",
+          "favorites.empty.text": "Start adding products to your favorites by clicking the ❤️ icon",
+          "favorites.empty.button": "Discover our products",
+          "favorites.error": "No products found in your favorites.",
+          "favorites.error.loading": "Error loading your favorites."
+        }
+      };
+
+      function getSavedLanguage() {
+        try {
+          return localStorage.getItem(LANGUAGE_KEY) || "fr";
+        } catch (err) {
+          return "fr";
+        }
+      }
+
+      function saveLanguage(lang) {
+        try {
+          localStorage.setItem(LANGUAGE_KEY, lang);
+        } catch (err) {
+          console.error("Erreur lors de la sauvegarde de la langue:", err);
+        }
+      }
+
+      function t(key) {
+        return translations[currentLanguage][key] || translations.fr[key] || key;
+      }
+
+      function updateLanguageButton() {
+        const languageToggle = document.getElementById("language-toggle");
+        const languageFlag = document.getElementById("language-flag");
+        if (languageToggle && languageFlag) {
+          languageFlag.textContent = currentLanguage === "fr" ? "🇬🇧" : "🇫🇷";
+          languageToggle.setAttribute("title", currentLanguage === "fr" ? "Switch to English" : "Passer en français");
+          languageToggle.setAttribute("aria-label", currentLanguage === "fr" ? "Switch to English" : "Passer en français");
+        }
+      }
+
+      function applyTranslations() {
+        const navLinks = document.querySelectorAll('.nav-link');
+        if (navLinks.length >= 4) {
+          navLinks[0].textContent = t("nav.home");
+          navLinks[1].textContent = t("nav.categories");
+          navLinks[2].textContent = t("nav.services");
+          navLinks[3].textContent = t("nav.about");
+        }
+
+        const searchInput = document.getElementById("search-input");
+        if (searchInput) searchInput.placeholder = t("nav.search");
+
+        const favoritesTitle = document.querySelector(".favorites-title");
+        if (favoritesTitle) favoritesTitle.textContent = t("favorites.title");
+
+        const favoritesSubtitle = document.getElementById("favorites-count");
+        if (favoritesSubtitle) {
+          const count = getFavorites().length;
+          favoritesSubtitle.textContent = `${count} ${t("favorites.subtitle")}`;
+        }
+
+        const emptyTitle = document.querySelector("#empty-favorites h2");
+        if (emptyTitle) emptyTitle.textContent = t("favorites.empty.title");
+
+        const emptyText = document.querySelector("#empty-favorites p");
+        if (emptyText) emptyText.textContent = t("favorites.empty.text");
+
+        const emptyButton = document.querySelector("#empty-favorites .product-button");
+        if (emptyButton) emptyButton.textContent = t("favorites.empty.button");
+
+        const bottomNavItems = document.querySelectorAll('.bottom-nav .nav-item span');
+        bottomNavItems.forEach((item, index) => {
+          const texts = [t("nav.home"), t("nav.categories"), t("nav.search"), t("nav.favorites"), t("nav.cart")];
+          if (texts[index]) item.textContent = texts[index];
+        });
+
+        updateLanguageButton();
+        document.documentElement.lang = currentLanguage;
+      }
+
+      function toggleLanguage() {
+        const newLang = currentLanguage === "fr" ? "en" : "fr";
+        currentLanguage = newLang;
+        saveLanguage(newLang);
+        applyTranslations();
+        // Recharger les favoris pour appliquer les traductions
+        loadFavorites();
+      }
+
+      const navSearchBtn = document.getElementById('nav-search-btn');
+      if (navSearchBtn) {
+        navSearchBtn.addEventListener('click', () => {
+          window.location.href = 'index.html';
+        });
+      }
+
+      document.addEventListener("DOMContentLoaded", () => {
+        // Initialiser la langue
+        currentLanguage = getSavedLanguage() || "fr";
+        applyTranslations();
+
+        // Gérer le bouton de toggle de langue
+        const languageToggle = document.getElementById("language-toggle");
+        if (languageToggle) {
+          languageToggle.addEventListener("click", toggleLanguage);
+        }
+
+        loadFavorites();
+        updateFavoriteCount();
+      });
+    </script>
+  </body>
+</html>
+

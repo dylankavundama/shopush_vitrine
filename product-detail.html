@@ -41,6 +41,9 @@
               </svg>
             </button>
           </form>
+          <button id="language-toggle" class="language-toggle" aria-label="Changer de langue" title="Changer de langue">
+            <span id="language-flag">🇫🇷</span>
+          </button>
           <a href="https://wa.me/243866666630" class="cart-icon" aria-label="Panier">
             <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
               <path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"></path>
@@ -123,10 +126,112 @@
       </div>
     </footer>
 
+    <!-- Menu de navigation mobile (bottom nav) -->
+    <nav class="bottom-nav" id="bottom-nav">
+      <a href="index.html" class="nav-item" aria-label="Accueil">
+        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
+          <polyline points="9 22 9 12 15 12 15 22"></polyline>
+        </svg>
+        <span>Accueil</span>
+      </a>
+      <a href="categories.html" class="nav-item" aria-label="Catégories">
+        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <rect x="3" y="3" width="7" height="7"></rect>
+          <rect x="14" y="3" width="7" height="7"></rect>
+          <rect x="14" y="14" width="7" height="7"></rect>
+          <rect x="3" y="14" width="7" height="7"></rect>
+        </svg>
+        <span>Catégories</span>
+      </a>
+      <button class="nav-item" id="nav-search-btn" aria-label="Rechercher">
+        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <circle cx="11" cy="11" r="8"></circle>
+          <path d="m21 21-4.35-4.35"></path>
+        </svg>
+        <span>Recherche</span>
+      </button>
+      <a href="https://wa.me/243866666630" class="nav-item" aria-label="Panier">
+        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"></path>
+          <line x1="3" y1="6" x2="21" y2="6"></line>
+          <path d="M16 10a4 4 0 0 1-8 0"></path>
+        </svg>
+        <span>Panier</span>
+      </a>
+    </nav>
+
     <script>
       // Configuration
       const API_BASE = "https://shopushindi.com/wp-json/wc/store/v1";
       const WHATSAPP_NUMBER = "+24386666630"; // Numéro WhatsApp pour les commandes
+      const FAVORITES_KEY = "ush_favorites";
+
+      // ====== Gestion des Favoris ======
+      function getFavorites() {
+        try {
+          const favorites = localStorage.getItem(FAVORITES_KEY);
+          return favorites ? JSON.parse(favorites) : [];
+        } catch (err) {
+          return [];
+        }
+      }
+
+      function saveFavorites(favorites) {
+        try {
+          localStorage.setItem(FAVORITES_KEY, JSON.stringify(favorites));
+        } catch (err) {
+          console.error("Erreur lors de la sauvegarde:", err);
+        }
+      }
+
+      function isFavorite(productId) {
+        return getFavorites().includes(productId);
+      }
+
+      function toggleFavorite(productId) {
+        const favorites = getFavorites();
+        const index = favorites.indexOf(productId);
+        
+        if (index > -1) {
+          favorites.splice(index, 1);
+        } else {
+          favorites.push(productId);
+        }
+        
+        saveFavorites(favorites);
+        return favorites.includes(productId);
+      }
+
+      function updateFavoriteCount() {
+        const favorites = getFavorites();
+        const count = favorites.length;
+        const navFavoriteBadge = document.getElementById("nav-favorite-count");
+        if (navFavoriteBadge) {
+          navFavoriteBadge.textContent = count > 0 ? count : "";
+          navFavoriteBadge.style.display = count > 0 ? "flex" : "none";
+        }
+      }
+
+      function showFavoriteNotification(message, isAdded) {
+        let notification = document.getElementById("favorite-notification");
+        if (!notification) {
+          notification = document.createElement("div");
+          notification.id = "favorite-notification";
+          notification.className = "favorite-notification";
+          document.body.appendChild(notification);
+        }
+        notification.textContent = message;
+        notification.className = `favorite-notification ${isAdded ? "added" : "removed"}`;
+        notification.style.display = "block";
+        setTimeout(() => {
+          notification.style.opacity = "0";
+          setTimeout(() => {
+            notification.style.display = "none";
+            notification.style.opacity = "1";
+          }, 300);
+        }, 2000);
+      }
 
       // Récupération de l'ID produit depuis l'URL
       const urlParams = new URLSearchParams(window.location.search);
@@ -341,6 +446,28 @@
         const actionsEl = document.createElement("div");
         actionsEl.className = "product-detail-actions";
 
+        // Bouton Favoris
+        const favoriteButton = document.createElement("button");
+        favoriteButton.className = "product-detail-button-favorite";
+        favoriteButton.type = "button";
+        favoriteButton.setAttribute("data-product-id", product.id);
+        favoriteButton.innerHTML = isFavorite(product.id) 
+          ? '<svg width="20" height="20" viewBox="0 0 24 24" fill="#ef4444" stroke="#ef4444" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path></svg> Retirer des favoris'
+          : '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path></svg> Ajouter aux favoris';
+        favoriteButton.addEventListener("click", () => {
+          const isFav = toggleFavorite(product.id);
+          favoriteButton.innerHTML = isFav
+            ? '<svg width="20" height="20" viewBox="0 0 24 24" fill="#ef4444" stroke="#ef4444" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path></svg> Retirer des favoris'
+            : '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path></svg> Ajouter aux favoris';
+          favoriteButton.classList.toggle("active", isFav);
+          showFavoriteNotification(isFav ? "Produit ajouté aux favoris" : "Produit retiré des favoris", isFav);
+          updateFavoriteCount();
+        });
+        if (isFavorite(product.id)) {
+          favoriteButton.classList.add("active");
+        }
+        actionsEl.appendChild(favoriteButton);
+
         const whatsappButton = document.createElement("button");
         whatsappButton.className = "product-detail-button-whatsapp";
         whatsappButton.type = "button";
@@ -404,7 +531,132 @@
         }
       }
 
+      // ====== Gestion de la Langue ======
+      const LANGUAGE_KEY = "ush_language";
+      let currentLanguage = getSavedLanguage() || "fr";
+
+      const translations = {
+        fr: {
+          "nav.home": "Accueil",
+          "nav.categories": "Catégories",
+          "nav.services": "Services",
+          "nav.about": "À propos",
+          "nav.search": "Rechercher",
+          "nav.favorites": "Favoris",
+          "nav.cart": "Panier",
+          "loading.product": "Chargement du produit…",
+          "favorites.add": "Ajouté aux favoris !",
+          "favorites.remove": "Retiré des favoris !",
+          "product.specs": "Caractéristiques",
+          "product.favorite.add": "Ajouter aux favoris",
+          "product.favorite.remove": "Retiré des favoris",
+          "product.whatsapp": "📱 Commander sur WhatsApp",
+          "product.view": "Voir sur le site"
+        },
+        en: {
+          "nav.home": "Home",
+          "nav.categories": "Categories",
+          "nav.services": "Services",
+          "nav.about": "About",
+          "nav.search": "Search",
+          "nav.favorites": "Favorites",
+          "nav.cart": "Cart",
+          "loading.product": "Loading product…",
+          "favorites.add": "Added to favorites!",
+          "favorites.remove": "Removed from favorites!",
+          "product.specs": "Specifications",
+          "product.favorite.add": "Add to favorites",
+          "product.favorite.remove": "Remove from favorites",
+          "product.whatsapp": "📱 Order on WhatsApp",
+          "product.view": "View on site"
+        }
+      };
+
+      function getSavedLanguage() {
+        try {
+          return localStorage.getItem(LANGUAGE_KEY) || "fr";
+        } catch (err) {
+          return "fr";
+        }
+      }
+
+      function saveLanguage(lang) {
+        try {
+          localStorage.setItem(LANGUAGE_KEY, lang);
+        } catch (err) {
+          console.error("Erreur lors de la sauvegarde de la langue:", err);
+        }
+      }
+
+      function t(key) {
+        return translations[currentLanguage][key] || translations.fr[key] || key;
+      }
+
+      function updateLanguageButton() {
+        const languageToggle = document.getElementById("language-toggle");
+        const languageFlag = document.getElementById("language-flag");
+        if (languageToggle && languageFlag) {
+          languageFlag.textContent = currentLanguage === "fr" ? "🇬🇧" : "🇫🇷";
+          languageToggle.setAttribute("title", currentLanguage === "fr" ? "Switch to English" : "Passer en français");
+          languageToggle.setAttribute("aria-label", currentLanguage === "fr" ? "Switch to English" : "Passer en français");
+        }
+      }
+
+      function applyTranslations() {
+        const navLinks = document.querySelectorAll('.nav-link');
+        if (navLinks.length >= 4) {
+          navLinks[0].textContent = t("nav.home");
+          navLinks[1].textContent = t("nav.categories");
+          navLinks[2].textContent = t("nav.services");
+          navLinks[3].textContent = t("nav.about");
+        }
+
+        const searchInput = document.getElementById("search-input");
+        if (searchInput) searchInput.placeholder = t("nav.search");
+
+        const bottomNavItems = document.querySelectorAll('.bottom-nav .nav-item span');
+        bottomNavItems.forEach((item, index) => {
+          const texts = [t("nav.home"), t("nav.categories"), t("nav.search"), t("nav.favorites"), t("nav.cart")];
+          if (texts[index]) item.textContent = texts[index];
+        });
+
+        updateLanguageButton();
+        document.documentElement.lang = currentLanguage;
+      }
+
+      function toggleLanguage() {
+        const newLang = currentLanguage === "fr" ? "en" : "fr";
+        currentLanguage = newLang;
+        saveLanguage(newLang);
+        applyTranslations();
+        // Recharger le produit pour appliquer les traductions
+        const urlParams = new URLSearchParams(window.location.search);
+        const productId = urlParams.get("id");
+        if (productId) {
+          fetchProductDetail(productId);
+        }
+      }
+
+      // Initialiser la langue
+      currentLanguage = getSavedLanguage() || "fr";
+      applyTranslations();
+
+      // Gérer le bouton de toggle de langue
+      const languageToggle = document.getElementById("language-toggle");
+      if (languageToggle) {
+        languageToggle.addEventListener("click", toggleLanguage);
+      }
+
       checkChristmasPeriod();
+      updateFavoriteCount();
+
+      // Gestion du bouton recherche dans le menu mobile
+      const navSearchBtn = document.getElementById('nav-search-btn');
+      if (navSearchBtn) {
+        navSearchBtn.addEventListener('click', () => {
+          window.location.href = 'index.html';
+        });
+      }
     </script>
   </body>
 </html>
