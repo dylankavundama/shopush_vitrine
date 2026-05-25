@@ -1,0 +1,92 @@
+.opening-hours-card {
+  background: var(--surface);
+  border-radius: var(--radius-md);
+  padding: 2.5rem;
+  box-shadow: var(--shadow-md);
+  border: 1px solid var(--border);
+  max-width: 800px;
+  margin: 0 auto;
+}
+
+.card-header {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-bottom: 2rem;
+  justify-content: center;
+}
+
+.card-header h3 {
+  font-size: 1.5rem;
+  font-weight: 700;
+  margin: 0;
+}
+
+.header-icon {
+  color: var(--primary);
+}
+
+.hours-grid {
+  display: grid;
+  gap: 0.75rem;
+}
+
+.hour-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1rem 1.5rem;
+  background: var(--background);
+  border-radius: var(--radius-sm);
+  transition: all 0.2s ease;
+  border: 1px solid transparent;
+}
+
+.hour-item.today {
+  background: #eff6ff;
+  border-color: var(--primary);
+  transform: scale(1.02);
+  box-shadow: 0 4px 12px rgba(99, 102, 241, 0.1);
+}
+
+.hour-item.closed {
+  opacity: 0.6;
+}
+
+.day-name {
+  font-weight: 600;
+  font-size: 1rem;
+}
+
+.day-status {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.hours-text {
+  font-weight: 500;
+  color: var(--text-muted);
+}
+
+.today-badge {
+  background: var(--primary);
+  color: white;
+  padding: 0.2rem 0.75rem;
+  border-radius: var(--radius-full);
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+@media (max-width: 640px) {
+  .hour-item {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.5rem;
+  }
+  .day-status {
+    width: 100%;
+    justify-content: space-between;
+  }
+}

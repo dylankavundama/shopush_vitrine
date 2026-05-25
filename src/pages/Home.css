@@ -1,0 +1,129 @@
+.home-page {
+  padding-bottom: 80px; /* Space for bottom nav */
+  background: #f3f4f6;
+  min-height: 100vh;
+}
+
+.app-header {
+  background: var(--primary); /* Logo Blue */
+  color: white;
+  padding: 0.75rem 1rem;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  position: sticky;
+  top: 0;
+  z-index: 1100;
+}
+
+.app-logo {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex: 1;
+}
+
+.app-logo img {
+  height: 30px;
+  background: white;
+  border-radius: 4px;
+  padding: 2px;
+}
+
+.app-title {
+  display: flex;
+  flex-direction: column;
+}
+
+.main-name {
+  font-weight: 800;
+  font-size: 1rem;
+  letter-spacing: 0.05em;
+}
+
+.small-in {
+  font-size: 0.7rem;
+  font-style: italic;
+  text-transform: lowercase;
+  margin: 0 2px;
+}
+
+.slogan {
+  font-size: 0.5rem;
+  font-weight: 700;
+  opacity: 0.9;
+}
+
+.top-filters {
+  padding: 1rem 0;
+  display: flex;
+  justify-content: center;
+}
+
+.filter-btn {
+  background: white;
+  border: 1px solid #e5e7eb;
+  padding: 0.5rem 1.5rem;
+  border-radius: 6px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #374151;
+  box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+}
+
+.home-section {
+  margin-bottom: 2rem;
+  background: white;
+  border-radius: 12px;
+  padding: 1.25rem;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+}
+
+.section-header-simple h2 {
+  font-size: 1.1rem;
+  font-weight: 800;
+  color: #111827;
+  margin: 0 0 0.25rem 0;
+}
+
+.section-header-simple p {
+  font-size: 0.85rem;
+  color: #6b7280;
+  margin: 0;
+}
+
+.center-btn {
+  display: flex;
+  justify-content: center;
+  margin-top: 1rem;
+}
+
+.btn-outline {
+  background: #f9fafb;
+  border: 1px solid #e5e7eb;
+  padding: 0.5rem 1.5rem;
+  border-radius: 6px;
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: #374151;
+  cursor: pointer;
+}
+
+.products-grid-mobile {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 1rem;
+  margin-top: 1rem;
+}
+
+@media (min-width: 768px) {
+  .products-grid-mobile {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+@media (min-width: 1024px) {
+  .products-grid-mobile {
+    grid-template-columns: repeat(4, 1fr);
+  }
+}

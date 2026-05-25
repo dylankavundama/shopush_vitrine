@@ -1,19 +1,29 @@
-# Page e‑commerce USH (API WordPress)
+# USH – Boutique React
 
-Cette petite application front‑end affiche les produits du site [shopushindi.com](https://shopushindi.com/) à l'aide de l'API WooCommerce Store (`/wp-json/wc/store/v1/products`).
+Une application e-commerce moderne construite avec React JS, connectée à l'API WooCommerce de shopushindi.com.
 
-## Utilisation
+## 🚀 Technologies
+- **Core** : React 18, Vite
+- **Navigation** : React Router Dom
+- **Icons** : Lucide React
+- **Animations** : Framer Motion
+- **State Management** : React Context API
+- **API** : WooCommerce Store API v1
 
-1. Placez tous les fichiers dans un même dossier (`index.html`, `styles.css`, `app.js`).
-2. Ouvrez simplement `index.html` dans votre navigateur (double‑clic ou clic droit → *Ouvrir avec* → votre navigateur).
-3. La page va :
-   - charger les produits depuis `https://shopushindi.com/` ;
-   - afficher les cartes produits (image, titre, prix, promo) ;
-   - proposer la recherche, le tri et la pagination.
+## 📁 Structure du Projet
+- `src/components/` : Composants UI et Layout
+- `src/context/` : Gestion de la langue et des favoris
+- `src/hooks/` : Logique de fetching personnalisée
+- `src/pages/` : Vues principales de l'application
+- `src/services/` : Configuration de l'API
 
-## Remarques techniques
+## 🛠️ Installation
+1. `npm install`
+2. `npm run dev`
 
-- Cette page utilise l'API WooCommerce **Store** (`wc/store/v1`), qui est publique et ne nécessite pas de clé si elle est activée sur le site WordPress.
-- Si aucun produit n'apparaît, vérifiez dans la console du navigateur (F12 → *Console*) s'il y a une erreur CORS ou API désactivée côté WordPress.
-
-
+## 🌍 Fonctionnalités
+- ✅ Recherche en temps réel
+- ✅ Tri par prix et date
+- ✅ Système de favoris persistant
+- ✅ Support multilingue (FR/EN)
+- ✅ Design responsive premium
