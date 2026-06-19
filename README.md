@@ -1,29 +1,16 @@
-# USH – Boutique React
+# React + Vite
 
-Une application e-commerce moderne construite avec React JS, connectée à l'API WooCommerce de shopushindi.com.
+This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
 
-## 🚀 Technologies
-- **Core** : React 18, Vite
-- **Navigation** : React Router Dom
-- **Icons** : Lucide React
-- **Animations** : Framer Motion
-- **State Management** : React Context API
-- **API** : WooCommerce Store API v1
+Currently, two official plugins are available:
 
-## 📁 Structure du Projet
-- `src/components/` : Composants UI et Layout
-- `src/context/` : Gestion de la langue et des favoris
-- `src/hooks/` : Logique de fetching personnalisée
-- `src/pages/` : Vues principales de l'application
-- `src/services/` : Configuration de l'API
+- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
+- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
 
-## 🛠️ Installation
-1. `npm install`
-2. `npm run dev`
+## React Compiler
 
-## 🌍 Fonctionnalités
-- ✅ Recherche en temps réel
-- ✅ Tri par prix et date
-- ✅ Système de favoris persistant
-- ✅ Support multilingue (FR/EN)
-- ✅ Design responsive premium
+The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+
+## Expanding the ESLint configuration
+
+If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
