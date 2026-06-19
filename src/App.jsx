@@ -295,7 +295,7 @@ function App() {
   }, [selectedProduct]);
 
   // WooCommerce Configuration State
-  const [credentials, setCredentials] = useState(getWCCredentials());
+  const [credentials, setCredentials] = useState(() => localStorage.getItem('shopusher_wc_credentials') ? JSON.parse(localStorage.getItem('shopusher_wc_credentials')) : null);
   const [wcUrl, setWcUrl] = useState(credentials?.url || '');
   const [wcKey, setWcKey] = useState(credentials?.consumerKey || '');
   const [wcSecret, setWcSecret] = useState(credentials?.consumerSecret || '');
@@ -618,7 +618,7 @@ function App() {
     }
   };
 
-  // Disconnect WooCommerce / Switch back to Demo Mode
+  // Disconnect WooCommerce / Switch back to default store
   const handleDisconnectWC = () => {
     deleteWCCredentials();
     setCredentials(null);
@@ -626,7 +626,7 @@ function App() {
     setWcKey('');
     setWcSecret('');
     setConnectionStatus(null);
-    showToast('Retour au mode démo local.', 'info');
+    showToast('Identifiants personnalisés réinitialisés. Boutique par défaut active.', 'info');
     setCurrentTab('home');
   };
 
@@ -3326,7 +3326,7 @@ function App() {
                     onClick={handleDisconnectWC}
                     className="btn btn-danger w-full py-2.5 rounded-xl font-bold text-xs"
                   >
-                    Déconnecter l'API WooCommerce (Retourner au mode Démo)
+                    Déconnecter l'API WooCommerce (Retourner à la boutique par défaut)
                   </button>
                 </div>
               ) : (

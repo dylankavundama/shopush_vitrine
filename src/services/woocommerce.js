@@ -1,9 +1,9 @@
 // WooCommerce and Mock API Service
 
-const CREDENTIALS_KEY = 'shopusher_wc_credentials';
+const CREDENTIALS_KEY = 'ShopUshindi_wc_credentials';
 
 const DEFAULT_CREDENTIALS = {
-  url: 'https://shopusher.com',
+  url: 'https://ShopUshindi.com',
   consumerKey: 'ck_30ec07f5c759aa430f41715156f306626141b737',
   consumerSecret: 'cs_e0b0c19012e996695a09d767e4a50bf0c254ec57'
 };
@@ -29,9 +29,6 @@ const decodeHtml = (html) => {
 
 export const getWCCredentials = () => {
   try {
-    const isDemo = localStorage.getItem('shopushindi_demo_mode') === 'true';
-    if (isDemo) return null;
-
     const saved = localStorage.getItem(CREDENTIALS_KEY);
     return saved ? JSON.parse(saved) : DEFAULT_CREDENTIALS;
   } catch (e) {
@@ -41,12 +38,10 @@ export const getWCCredentials = () => {
 
 export const saveWCCredentials = (credentials) => {
   localStorage.setItem(CREDENTIALS_KEY, JSON.stringify(credentials));
-  localStorage.removeItem('shopushindi_demo_mode');
 };
 
 export const deleteWCCredentials = () => {
   localStorage.removeItem(CREDENTIALS_KEY);
-  localStorage.setItem('shopushindi_demo_mode', 'true');
 };
 
 // Premium Mock Data to wow the user out of the box
@@ -328,7 +323,7 @@ const testWooCommerceConnection = async (url, consumerKey, consumerSecret) => {
 // Main WooCommerce Client Layer
 export const wooCommerceService = {
   isDemoMode: () => {
-    return !getWCCredentials();
+    return false;
   },
 
   testConnection: testWooCommerceConnection,
@@ -336,11 +331,6 @@ export const wooCommerceService = {
   // Fetch all categories
   getCategories: async () => {
     const creds = getWCCredentials();
-
-    if (!creds) {
-      // Return mock categories
-      return MOCK_CATEGORIES;
-    }
 
     try {
       const formattedUrl = creds.url.endsWith('/') ? creds.url : `${creds.url}/`;
@@ -364,8 +354,8 @@ export const wooCommerceService = {
 
       return [{ id: 'all', name: 'Tout', slug: 'all', count: formatted.reduce((acc, c) => acc + c.count, 0), icon: 'Grid' }, ...formatted];
     } catch (e) {
-      console.warn('WooCommerce API failed, falling back to Mock Categories:', e);
-      return MOCK_CATEGORIES;
+      console.error('WooCommerce API failed:', e);
+      return [];
     }
   },
 
@@ -376,38 +366,6 @@ export const wooCommerceService = {
     const filterProducts = (list) => {
       return list;
     };
-
-    if (!creds) {
-      // Mock Filtering
-      let results = filterProducts([...MOCK_PRODUCTS]);
-
-      if (category && category !== 'all') {
-        results = results.filter(p => p.categories.some(cat => String(cat.id) === String(category) || String(cat.slug) === String(category)));
-      }
-
-      if (search) {
-        const query = search.toLowerCase();
-        results = results.filter(p => 
-          p.name.toLowerCase().includes(query) || 
-          p.description.toLowerCase().includes(query) || 
-          p.short_description.toLowerCase().includes(query) ||
-          (p.brand && p.brand.toLowerCase().includes(query))
-        );
-      }
-
-      // Sort
-      if (sort === 'price-low') {
-        results.sort((a, b) => a.price - b.price);
-      } else if (sort === 'price-high') {
-        results.sort((a, b) => b.price - a.price);
-      } else if (sort === 'rating') {
-        results.sort((a, b) => b.rating - a.rating);
-      }
-
-      // Pagination
-      const start = (page - 1) * perPage;
-      return results.slice(start, start + perPage);
-    }
 
     try {
       const formattedUrl = creds.url.endsWith('/') ? creds.url : `${creds.url}/`;
@@ -455,52 +413,14 @@ export const wooCommerceService = {
 
       return filterProducts(mapped);
     } catch (e) {
-      console.warn('WooCommerce API failed, falling back to Mock Products:', e);
-      // Fallback
-      let results = filterProducts([...MOCK_PRODUCTS]);
-
-      if (category && category !== 'all') {
-        results = results.filter(p => p.categories.some(cat => String(cat.id) === String(category) || String(cat.slug) === String(category)));
-      }
-
-      if (search) {
-        const query = search.toLowerCase();
-        results = results.filter(p => 
-          p.name.toLowerCase().includes(query) || 
-          (p.description && p.description.toLowerCase().includes(query)) || 
-          (p.short_description && p.short_description.toLowerCase().includes(query)) ||
-          (p.brand && p.brand.toLowerCase().includes(query))
-        );
-      }
-
-      // Sort
-      if (sort === 'price-low') {
-        results.sort((a, b) => a.price - b.price);
-      } else if (sort === 'price-high') {
-        results.sort((a, b) => b.price - a.price);
-      } else if (sort === 'rating') {
-        results.sort((a, b) => b.rating - a.rating);
-      }
-
-      // Pagination
-      const start = (page - 1) * perPage;
-      return results.slice(start, start + perPage);
+      console.error('WooCommerce API failed:', e);
+      return [];
     }
   },
 
-  // Create order (both locally for demonstration and via WooCommerce if credentials are valid)
+  // Create order
   createOrder: async (orderData) => {
     const creds = getWCCredentials();
-    if (!creds) {
-      // Simulate slow API
-      await new Promise(resolve => setTimeout(resolve, 1500));
-      return {
-        id: Math.floor(Math.random() * 900000) + 100000,
-        status: 'pending',
-        total: orderData.total,
-        date_created: new Date().toISOString()
-      };
-    }
 
     try {
       const formattedUrl = creds.url.endsWith('/') ? creds.url : `${creds.url}/`;
