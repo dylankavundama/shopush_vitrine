@@ -295,7 +295,7 @@ function App() {
   }, [selectedProduct]);
 
   // WooCommerce Configuration State
-  const [credentials, setCredentials] = useState(() => localStorage.getItem('shopusher_wc_credentials') ? JSON.parse(localStorage.getItem('shopusher_wc_credentials')) : null);
+  const [credentials, setCredentials] = useState(() => localStorage.getItem('ShopUshindi_wc_credentials') ? JSON.parse(localStorage.getItem('ShopUshindi_wc_credentials')) : null);
   const [wcUrl, setWcUrl] = useState(credentials?.url || '');
   const [wcKey, setWcKey] = useState(credentials?.consumerKey || '');
   const [wcSecret, setWcSecret] = useState(credentials?.consumerSecret || '');
@@ -702,9 +702,6 @@ function App() {
     let list = [];
     if (homeProductTab === 'recent') {
       list = recentlyViewed;
-      if (selectedCategory && selectedCategory !== 'all') {
-        list = list.filter(p => p.categories?.some(cat => String(cat.id) === String(selectedCategory)));
-      }
       if (searchQuery) {
         const q = searchQuery.toLowerCase();
         list = list.filter(p =>
@@ -720,9 +717,30 @@ function App() {
       list = [...products].sort((a, b) => b.id - a.id);
     }
 
-    // Filter out vehicles for the homepage grid, just like in original code
-    return list.filter((p) => {
-      if (selectedCategory !== 'all') return true;
+    // Filter by selected category locally as well for absolute precision
+    if (selectedCategory && selectedCategory !== 'all') {
+      list = list.filter(p => p.categories?.some(cat => String(cat.id) === String(selectedCategory)));
+    }
+
+    // Filter out vehicles for the homepage grid, only if there are non-vehicle products in the list
+    const hasNonVehicles = list.some((p) => {
+      const isVeh = p.categories?.some(cat =>
+        cat.name?.toLowerCase().includes('vehicule') ||
+        cat.name?.toLowerCase().includes('véhicule') ||
+        cat.name?.toLowerCase().includes('voiture') ||
+        cat.name?.toLowerCase().includes('engin') ||
+        cat.slug?.toLowerCase().includes('vehicule') ||
+        cat.slug?.toLowerCase().includes('véhicule')
+      ) ||
+        ['mercedes', 'toyota', 'subaru', 'subari', 'howo'].some(brand =>
+          p.brand?.toLowerCase().includes(brand) ||
+          p.name?.toLowerCase().includes(brand)
+        );
+      return !isVeh;
+    });
+
+    const filtered = list.filter((p) => {
+      if (selectedCategory !== 'all' || !hasNonVehicles) return true;
       const isVehicle = p.categories?.some(cat =>
         cat.name?.toLowerCase().includes('vehicule') ||
         cat.name?.toLowerCase().includes('véhicule') ||
@@ -737,6 +755,12 @@ function App() {
         );
       return !isVehicle;
     });
+
+    // Limit to the 5 most recently added products for the arrivals tab (only when browsing all categories)
+    if (homeProductTab === 'arrivage' && selectedCategory === 'all') {
+      return filtered.slice(0, 5);
+    }
+    return filtered;
   })();
 
   return (
@@ -1589,6 +1613,12 @@ function App() {
                               setSelectedCategory(cat.id);
                               setSearchQuery('');
                               setIsCategoryDropdownOpen(false);
+                              setSelectedProduct(null);
+                              setCurrentTab('home');
+                              setTimeout(() => {
+                                const el = document.getElementById('products-section');
+                                el?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                              }, 100);
                             }}
                             className={`w-full flex items-center justify-between p-3 rounded-xl transition duration-200 text-left group ${isActive
                               ? 'bg-emerald-500/10 border border-emerald-500/20 text-emerald-600 dark:text-emerald-400'
@@ -1733,22 +1763,31 @@ function App() {
                 <div className="flex flex-col xl:flex-row xl:items-center justify-between gap-6 pb-6 border-b border-white/5">
                   <div>
                     <h2 className="text-xl md:text-2xl font-extrabold text-white flex items-center gap-2">
-                      {homeProductTab === 'arrivage' && (
+                      {selectedCategory !== 'all' ? (
                         <>
-                          <Sparkles className="text-emerald-400 animate-pulse" size={20} />
-                          Arrivages
+                          <Compass className="text-emerald-400 animate-pulse" size={20} />
+                          {categories.find(c => String(c.id) === String(selectedCategory))?.name || 'Collection'}
                         </>
-                      )}
-                      {homeProductTab === 'populaire' && (
+                      ) : (
                         <>
-                          <Star className="text-amber-400 fill-amber-400/20" size={20} />
-                          Articles Populaires
-                        </>
-                      )}
-                      {homeProductTab === 'recent' && (
-                        <>
-                          <Clock className="text-purple-400" size={20} />
-                          Récemment Vus
+                          {homeProductTab === 'arrivage' && (
+                            <>
+                              <Sparkles className="text-emerald-400 animate-pulse" size={20} />
+                              Arrivages
+                            </>
+                          )}
+                          {homeProductTab === 'populaire' && (
+                            <>
+                              <Star className="text-amber-400 fill-amber-400/20" size={20} />
+                              Articles Populaires
+                            </>
+                          )}
+                          {homeProductTab === 'recent' && (
+                            <>
+                              <Clock className="text-purple-400" size={20} />
+                              Récemment Vus
+                            </>
+                          )}
                         </>
                       )}
                     </h2>

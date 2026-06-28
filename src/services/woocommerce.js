@@ -385,6 +385,9 @@ export const wooCommerceService = {
         endpoint += `&orderby=price&order=desc`;
       } else if (sort === 'rating') {
         endpoint += `&orderby=rating&order=desc`;
+      } else {
+        // Default sorting: recently added products first
+        endpoint += `&orderby=id&order=desc`;
       }
 
       const response = await fetch(endpoint);
@@ -410,6 +413,11 @@ export const wooCommerceService = {
         brand: decodeHtml(p.attributes.find(a => a.name.toLowerCase() === 'brand' || a.name.toLowerCase() === 'marque')?.options[0] || ''),
         specs: p.attributes.map(a => ({ label: decodeHtml(a.name), value: decodeHtml(a.options.join(', ')) }))
       }));
+
+      // Double-check client-side sorting by ID descending for default sort
+      if (sort === 'default') {
+        mapped.sort((a, b) => b.id - a.id);
+      }
 
       return filterProducts(mapped);
     } catch (e) {
