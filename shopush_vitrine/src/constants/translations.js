@@ -42,7 +42,7 @@ export const translations = {
     "removed.from.favorites": "Produit retiré des favoris",
     "christmas.greet": "Joyeux Noël",
     "back": "Retour",
-    "buy.whatsapp": "Commander sur WhatsApp",
+    "buy.whatsapp": "Je veux ça !",
     "specifications": "Spécifications",
     "description": "Description"
   },

@@ -1170,7 +1170,7 @@ function App() {
                   <i className="fa-brands fa-whatsapp text-lg" />
                 </a>
                 <a
-                  href="https://wa.me/message/Q67LCSEWCQJWF1"
+                  href="https://wa.me/c/243896666630"
                   target="_blank"
                   rel="noreferrer"
                   className="mobile-menu-social-link"
@@ -1281,7 +1281,7 @@ function App() {
                   <i className="fa-brands fa-whatsapp text-sm"></i>
                 </a>
                 <a
-                  href="https://wa.me/message/Q67LCSEWCQJWF1"
+                  href="https://wa.me/c/243896666630"
                   target="_blank"
                   rel="noreferrer"
                   className="w-9 h-9 flex items-center justify-center rounded-full bg-slate-900 border border-white/5 text-slate-400 hover:text-emerald-400 hover:border-emerald-400/30 transition duration-300 shadow-sm hover:-translate-y-1"
@@ -2910,30 +2910,34 @@ function App() {
                     <section className="space-y-4 !pt-2 pb-8 !mt-6">
                       <div className="flex flex-col sm:flex-row gap-4">
                         <button
-                          onClick={() => addToCart(selectedProduct, detailQty)}
-                          className="btn btn-primary flex-1 py-3.5 rounded-2xl text-base shadow-emerald-500/25 font-extrabold flex items-center justify-center gap-2 hover:scale-[1.01] active:scale-[0.99] transition duration-300"
-                        >
-                          <ShoppingCart size={18} /> Ajouter au panier
-                        </button>
-
-                        <button
                           onClick={() => {
                             const detailPrice = (Number(selectedProduct.price) === 0 || !selectedProduct.price)
                               ? (isVehicleProduct(selectedProduct) ? "Prix disponible sur demande" : "Sur demande")
                               : `$${selectedProduct.price}`;
-                            const messageText = `*NOUVELLE COMMANDE DIRECTE - SHOPUSHINDI*\n\n` +
-                              `Je souhaite commander le produit suivant :\n` +
+                            const productUrl = `${window.location.origin}${window.location.pathname}?product=${selectedProduct.id}`;
+                            const introText = isVehicleProduct(selectedProduct)
+                              ? "Je souhaite savoir si je peux avoir ce même modèle de véhicule :"
+                              : "Je souhaite savoir si je peux avoir ce produit :";
+                            const messageText = `${introText}\n` +
                               `- *${selectedProduct.name}* (x${detailQty}) - ${detailPrice}\n\n` +
-                              `Merci de m'indiquer la disponibilité et les modalités de livraison !`;
+                              `Merci de m'indiquer la disponibilité et les modalités de livraison !\n\n` +
+                              `Lien du produit :\n${productUrl}`;
                             const encodedMsg = encodeURIComponent(messageText);
-                            const cleanPhone = billingDetails.whatsappNumber.replace('+', '').replace(' ', '');
+                            const cleanPhone = billingDetails.whatsappNumber.replace('+', '').replace(/\s/g, '');
                             const whatsappUrl = `https://wa.me/${cleanPhone}?text=${encodedMsg}`;
                             window.open(whatsappUrl, '_blank');
                             showToast('Redirection vers WhatsApp...', 'success');
                           }}
                           className="btn bg-[#25D366] hover:bg-[#20ba5a] text-slate-950 flex-1 py-3.5 rounded-2xl text-base shadow-lg shadow-[#25D366]/20 font-extrabold flex items-center justify-center gap-2 hover:scale-[1.01] active:scale-[0.99] transition-all duration-300 animate-pulse-subtle"
                         >
-                          <WhatsAppIcon className="w-5 h-5" /> Commander sur WhatsApp
+                          <WhatsAppIcon className="w-5 h-5" /> Je veux ça !
+                        </button>
+
+                        <button
+                          onClick={() => addToCart(selectedProduct, detailQty)}
+                          className="btn btn-primary flex-1 py-3.5 rounded-2xl text-base shadow-emerald-500/25 font-extrabold flex items-center justify-center gap-2 hover:scale-[1.01] active:scale-[0.99] transition duration-300"
+                        >
+                          <ShoppingCart size={18} /> Ajouter au panier
                         </button>
 
                         <button
@@ -3282,7 +3286,7 @@ function App() {
                             onClick={handlePlaceOrder}
                             className="w-full btn bg-[#25D366] hover:bg-[#20ba5a] text-slate-950 py-4 rounded-2xl flex items-center justify-center gap-2 shadow-lg shadow-[#25D366]/20 font-extrabold transition-all duration-300 hover:scale-[1.01]"
                           >
-                            <WhatsAppIcon className="w-5 h-5" /> Commander sur WhatsApp
+                            <WhatsAppIcon className="w-5 h-5" /> Je veux ça !
                           </button>
                         )}
                       </div>
