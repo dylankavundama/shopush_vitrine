@@ -3,17 +3,17 @@
 
 <head>
   <meta charset="UTF-8" />
-  <link rel="icon" type="image/png" href="/favicon.png" />
+  <link rel="icon" type="image/png" href="%BASE_URL%favicon.png" />
   <meta name="viewport"
-    content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+    content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
 
   <!-- PWA Settings -->
   <meta name="mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
   <meta name="apple-mobile-web-app-title" content="ShopUshindi" />
-  <link rel="apple-touch-icon" href="/favicon.png" />
-  <link rel="manifest" href="/manifest.json" />
+  <link rel="apple-touch-icon" href="%BASE_URL%favicon.png" />
+  <link rel="manifest" href="%BASE_URL%manifest.json" />
   <meta name="theme-color" content="#10b981" />
 
   <!-- Google Fonts for High-End Design -->
@@ -56,7 +56,7 @@
   <script>
     if ('serviceWorker' in navigator) {
       if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
-        // Désactiver le Service Worker et vider le cache en développement local pour éviter les problèmes de mise en cache
+        // Désactiver le Service Worker et vider le cache en développement local
         navigator.serviceWorker.getRegistrations().then((registrations) => {
           for (let registration of registrations) {
             registration.unregister().then((success) => {
@@ -75,8 +75,13 @@
         }
       } else {
         window.addEventListener('load', () => {
-          navigator.serviceWorker.register('/sw.js')
-            .then((reg) => console.log('[PWA] Service Worker enregistré avec succès:', reg.scope))
+          // Relatif au dossier /shop/ (évite les 404 sur /assets et /sw.js à la racine)
+          const swUrl = new URL('sw.js', window.location.href).pathname;
+          navigator.serviceWorker.register(swUrl, { scope: new URL('.', window.location.href).pathname })
+            .then((reg) => {
+              console.log('[PWA] Service Worker enregistré avec succès:', reg.scope);
+              reg.update().catch(() => {});
+            })
             .catch((err) => console.error('[PWA] Échec de l\'enregistrement du Service Worker:', err));
         });
       }

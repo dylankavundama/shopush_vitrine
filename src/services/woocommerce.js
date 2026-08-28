@@ -44,6 +44,21 @@ export const deleteWCCredentials = () => {
   localStorage.removeItem(CREDENTIALS_KEY);
 };
 
+/** Recency timestamp: prefer publish/create date, then last update (draft→publish bumps both). */
+export const getProductRecency = (product) => {
+  const created = product?.date_created ? new Date(product.date_created).getTime() : 0;
+  const modified = product?.date_modified ? new Date(product.date_modified).getTime() : 0;
+  const best = Math.max(created || 0, modified || 0);
+  return Number.isFinite(best) ? best : 0;
+};
+
+/** Sort newest → oldest; fall back to id when dates are missing. */
+export const compareProductsByRecency = (a, b) => {
+  const diff = getProductRecency(b) - getProductRecency(a);
+  if (diff !== 0) return diff;
+  return (b.id || 0) - (a.id || 0);
+};
+
 // Premium Mock Data to wow the user out of the box
 const MOCK_CATEGORIES = [
   { id: 'all', name: 'Tout', slug: 'all', count: 10, icon: 'Grid' },
@@ -334,7 +349,8 @@ export const wooCommerceService = {
 
     try {
       const formattedUrl = creds.url.endsWith('/') ? creds.url : `${creds.url}/`;
-      const endpoint = `${formattedUrl}wp-json/wc/v3/products/categories?consumer_key=${creds.consumerKey}&consumer_secret=${creds.consumerSecret}&per_page=50`;
+      // WooCommerce max per_page = 100
+      const endpoint = `${formattedUrl}wp-json/wc/v3/products/categories?consumer_key=${creds.consumerKey}&consumer_secret=${creds.consumerSecret}&per_page=100&hide_empty=true`;
       
       const response = await fetch(endpoint);
       if (!response.ok) throw new Error('WooCommerce API error');
@@ -359,17 +375,33 @@ export const wooCommerceService = {
     }
   },
 
-  // Fetch products with support for filter, search, category
-  getProducts: async ({ category = 'all', search = '', page = 1, perPage = 20, sort = 'default' } = {}) => {
+  // Fetch products with support for filter, search, category (all pages)
+  getProducts: async ({ category = 'all', search = '', page = 1, perPage = 100, sort = 'default', fetchAll = true } = {}) => {
     const creds = getWCCredentials();
 
-    const filterProducts = (list) => {
-      return list;
-    };
+    const mapProduct = (p) => ({
+      id: p.id,
+      name: decodeHtml(p.name),
+      slug: p.slug,
+      price: parseFloat(p.price || 0),
+      regular_price: parseFloat(p.regular_price || p.price || 0),
+      on_sale: p.on_sale,
+      description: decodeHtml((p.description || '').replace(/<[^>]*>?/gm, '')),
+      short_description: decodeHtml((p.short_description || '').replace(/<[^>]*>?/gm, '')),
+      categories: (p.categories || []).map(c => ({ id: c.id.toString(), name: decodeHtml(c.name), slug: c.slug || '' })),
+      images: p.images?.length > 0 ? p.images.map(img => ({ src: ensureHttps(img.src) })) : [{ src: 'https://images.unsplash.com/photo-1531403009284-440f080d1e12?auto=format&fit=crop&q=80&w=600' }],
+      rating: parseFloat(p.average_rating || 0) || 4.5,
+      reviews_count: p.rating_count || 10,
+      stock_status: p.stock_status,
+      brand: decodeHtml(p.attributes?.find(a => a.name.toLowerCase() === 'brand' || a.name.toLowerCase() === 'marque')?.options?.[0] || ''),
+      specs: (p.attributes || []).map(a => ({ label: decodeHtml(a.name), value: decodeHtml(a.options.join(', ')) })),
+      date_created: p.date_created || null,
+      date_modified: p.date_modified || null,
+    });
 
-    try {
+    const buildEndpoint = (pageNum) => {
       const formattedUrl = creds.url.endsWith('/') ? creds.url : `${creds.url}/`;
-      let endpoint = `${formattedUrl}wp-json/wc/v3/products?consumer_key=${creds.consumerKey}&consumer_secret=${creds.consumerSecret}&page=${page}&per_page=${perPage}&status=publish`;
+      let endpoint = `${formattedUrl}wp-json/wc/v3/products?consumer_key=${creds.consumerKey}&consumer_secret=${creds.consumerSecret}&page=${pageNum}&per_page=${perPage}&status=publish`;
 
       if (category && category !== 'all') {
         endpoint += `&category=${category}`;
@@ -386,40 +418,44 @@ export const wooCommerceService = {
       } else if (sort === 'rating') {
         endpoint += `&orderby=rating&order=desc`;
       } else {
-        // Default sorting: recently added products first
-        endpoint += `&orderby=id&order=desc`;
+        // modified: un brouillon publié récemment remonte en tête (date_created peut rester ancienne)
+        endpoint += `&orderby=modified&order=desc`;
       }
 
-      const response = await fetch(endpoint);
-      if (!response.ok) throw new Error('WooCommerce API error');
-      
-      const wcProducts = await response.json();
+      return endpoint;
+    };
 
-      // Standardize products structure
-      const mapped = wcProducts.map(p => ({
-        id: p.id,
-        name: decodeHtml(p.name),
-        slug: p.slug,
-        price: parseFloat(p.price || 0),
-        regular_price: parseFloat(p.regular_price || p.price || 0),
-        on_sale: p.on_sale,
-        description: decodeHtml(p.description.replace(/<[^>]*>?/gm, '')), // strip tags and decode
-        short_description: decodeHtml(p.short_description.replace(/<[^>]*>?/gm, '')),
-        categories: p.categories.map(c => ({ id: c.id.toString(), name: decodeHtml(c.name) })),
-        images: p.images.length > 0 ? p.images.map(img => ({ src: ensureHttps(img.src) })) : [{ src: 'https://images.unsplash.com/photo-1531403009284-440f080d1e12?auto=format&fit=crop&q=80&w=600' }],
-        rating: parseFloat(p.average_rating || 0) || 4.5,
-        reviews_count: p.rating_count || 10,
-        stock_status: p.stock_status,
-        brand: decodeHtml(p.attributes.find(a => a.name.toLowerCase() === 'brand' || a.name.toLowerCase() === 'marque')?.options[0] || ''),
-        specs: p.attributes.map(a => ({ label: decodeHtml(a.name), value: decodeHtml(a.options.join(', ')) }))
-      }));
+    try {
+      const mapped = [];
+      let currentPage = page;
+      let totalPages = 1;
+      const maxPages = fetchAll ? 50 : 1; // sécurité (jusqu'à 5000 produits)
 
-      // Double-check client-side sorting by ID descending for default sort
+      do {
+        const response = await fetch(buildEndpoint(currentPage));
+        if (!response.ok) throw new Error('WooCommerce API error');
+
+        const headerPages = parseInt(response.headers.get('X-WP-TotalPages') || '0', 10);
+        const wcProducts = await response.json();
+        if (!Array.isArray(wcProducts) || wcProducts.length === 0) break;
+
+        mapped.push(...wcProducts.map(mapProduct));
+
+        if (headerPages > 0) {
+          totalPages = headerPages;
+        } else {
+          // CORS peut masquer X-WP-TotalPages : continuer tant que la page est pleine
+          totalPages = wcProducts.length >= perPage ? currentPage + 1 : currentPage;
+        }
+
+        currentPage += 1;
+      } while (fetchAll && currentPage <= totalPages && currentPage <= maxPages);
+
       if (sort === 'default') {
-        mapped.sort((a, b) => b.id - a.id);
+        mapped.sort(compareProductsByRecency);
       }
 
-      return filterProducts(mapped);
+      return mapped;
     } catch (e) {
       console.error('WooCommerce API failed:', e);
       return [];

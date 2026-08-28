@@ -1,90 +1,154 @@
-const CACHE_NAME = 'shopushindi-cache-v1';
-const ASSETS_TO_CACHE = [
-  '/',
-  '/index.html',
-  '/favicon.png',
-  '/logo.png',
-  '/manifest.json'
+const CACHE_NAME = 'shopushindi-cache-v3';
+
+// Chemins relatifs au scope du SW (/shop/ en prod, / en local)
+const SCOPE = self.registration.scope;
+
+const PRECACHE_PATHS = [
+  'index.html',
+  'favicon.png',
+  'logo.png',
+  'manifest.json'
 ];
 
-// Install Event
+function toScopedUrl(path) {
+  return new URL(path, SCOPE).href;
+}
+
+function scopedPathname(path) {
+  return new URL(path, SCOPE).pathname;
+}
+
+async function fetchFollow(url) {
+  return fetch(url, {
+    redirect: 'follow',
+    credentials: 'same-origin',
+    cache: 'no-cache'
+  });
+}
+
+async function precacheAssets() {
+  const cache = await caches.open(CACHE_NAME);
+  await Promise.all(
+    PRECACHE_PATHS.map(async (path) => {
+      const url = toScopedUrl(path);
+      try {
+        const response = await fetchFollow(url);
+        if (response.ok) {
+          await cache.put(url, response);
+        }
+      } catch (err) {
+        console.warn('[Service Worker] Precache échoué:', url, err);
+      }
+    })
+  );
+}
+
 self.addEventListener('install', (event) => {
   event.waitUntil(
-    caches.open(CACHE_NAME).then((cache) => {
-      console.log('[Service Worker] Caching static shell');
-      return cache.addAll(ASSETS_TO_CACHE);
-    })
+    precacheAssets().then(() => self.skipWaiting())
   );
-  self.skipWaiting();
 });
 
-// Activate Event
 self.addEventListener('activate', (event) => {
   event.waitUntil(
-    caches.keys().then((keyList) => {
-      return Promise.all(
-        keyList.map((key) => {
-          if (key !== CACHE_NAME) {
-            console.log('[Service Worker] Removing old cache', key);
+    (async () => {
+      const keys = await caches.keys();
+      await Promise.all(
+        keys
+          .filter((key) => key !== CACHE_NAME)
+          .map((key) => {
+            console.log('[Service Worker] Suppression ancien cache', key);
             return caches.delete(key);
-          }
-        })
+          })
       );
-    })
+      await self.clients.claim();
+    })()
   );
-  return self.clients.claim();
 });
 
-// Fetch Event (Network First, fallback to cache for pages/assets, Cache First for static images)
 self.addEventListener('fetch', (event) => {
-  const requestUrl = new URL(event.request.url);
-
-  // Skip non-GET requests
   if (event.request.method !== 'GET') return;
 
-  // For API calls (e.g. WooCommerce or mock database calls), use Network First
-  if (requestUrl.pathname.includes('/wp-json/') || requestUrl.pathname.includes('/api/')) {
+  const requestUrl = new URL(event.request.url);
+
+  // Ne pas intercepter le hors-scope / cross-origin
+  if (!requestUrl.href.startsWith(SCOPE)) return;
+
+  // Navigations : network-first + redirect:follow
+  if (event.request.mode === 'navigate') {
     event.respondWith(
-      fetch(event.request)
-        .then((response) => {
-          // If response is good, clone it and put in cache for offline support
-          if (response.status === 200) {
-            const responseClone = response.clone();
-            caches.open(CACHE_NAME).then((cache) => {
-              cache.put(event.request, responseClone);
-            });
+      (async () => {
+        try {
+          const networkResponse = await fetchFollow(requestUrl.href);
+          if (networkResponse.ok) {
+            const cache = await caches.open(CACHE_NAME);
+            await cache.put(toScopedUrl('index.html'), networkResponse.clone());
           }
-          return response;
-        })
-        .catch(() => {
-          // If network fails, serve from cache
-          return caches.match(event.request);
-        })
+          return networkResponse;
+        } catch {
+          const cached = await caches.match(toScopedUrl('index.html'));
+          return cached || Response.error();
+        }
+      })()
     );
     return;
   }
 
-  // Standard static asset handling (Cache with Network Update)
+  if (
+    requestUrl.pathname.includes('/wp-json/') ||
+    requestUrl.pathname.includes('/api/')
+  ) {
+    event.respondWith(
+      fetch(event.request).catch(() => caches.match(event.request))
+    );
+    return;
+  }
+
+  const assetsPrefix = scopedPathname('assets/');
+  if (requestUrl.pathname.startsWith(assetsPrefix)) {
+    event.respondWith(
+      (async () => {
+        try {
+          const networkResponse = await fetchFollow(requestUrl.href);
+          if (networkResponse.ok) {
+            const cache = await caches.open(CACHE_NAME);
+            await cache.put(requestUrl.href, networkResponse.clone());
+          }
+          return networkResponse;
+        } catch {
+          return (await caches.match(requestUrl.href)) || Response.error();
+        }
+      })()
+    );
+    return;
+  }
+
   event.respondWith(
-    caches.match(event.request).then((cachedResponse) => {
-      const fetchPromise = fetch(event.request)
-        .then((networkResponse) => {
-          if (networkResponse.status === 200) {
-            const responseClone = networkResponse.clone();
-            caches.open(CACHE_NAME).then((cache) => {
-              cache.put(event.request, responseClone);
-            });
+    (async () => {
+      const cachedResponse = await caches.match(event.request);
+      const networkPromise = fetchFollow(requestUrl.href)
+        .then(async (networkResponse) => {
+          if (networkResponse.ok) {
+            const cache = await caches.open(CACHE_NAME);
+            await cache.put(requestUrl.href, networkResponse.clone());
           }
           return networkResponse;
         })
-        .catch(() => {
-          // If offline and request is HTML, we can return the cached index.html or simple offline response
-          if (event.request.headers.get('accept').includes('text/html')) {
-            return caches.match('/');
-          }
-        });
+        .catch(() => null);
 
-      return cachedResponse || fetchPromise;
-    })
+      if (cachedResponse) {
+        networkPromise.catch(() => {});
+        return cachedResponse;
+      }
+
+      const networkResponse = await networkPromise;
+      if (networkResponse) return networkResponse;
+
+      if (event.request.headers.get('accept')?.includes('text/html')) {
+        return (await caches.match(toScopedUrl('index.html'))) || Response.error();
+      }
+
+      return Response.error();
+    })()
   );
 });

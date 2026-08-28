@@ -46,7 +46,7 @@ import {
   BookOpen,
   Camera
 } from 'lucide-react';
-import { wooCommerceService, getWCCredentials, saveWCCredentials, deleteWCCredentials } from './services/woocommerce';
+import { wooCommerceService, getWCCredentials, saveWCCredentials, deleteWCCredentials, compareProductsByRecency } from './services/woocommerce';
 
 import appleLogo from './assets/marque/apple.png';
 import djiLogo from './assets/marque/dji.jpg';
@@ -100,6 +100,74 @@ const isVehicleProduct = (p) => {
   );
   return !!(inCategory || byBrand);
 };
+
+/** Sections catégorie affichées sur l'accueil (masquées si aucun produit). */
+const HOME_CATEGORY_SECTIONS = [
+  {
+    id: 'accessoires',
+    title: 'Accessoires',
+    Icon: Sparkles,
+    match: (text) =>
+      text.includes('accessoire') || text.includes('accessory'),
+  },
+  {
+    id: 'audios',
+    title: 'Audios',
+    Icon: Headphones,
+    match: (text) =>
+      text.includes('audio') ||
+      text.includes('casque') ||
+      text.includes('écouteur') ||
+      text.includes('ecouteur') ||
+      text.includes('headphone') ||
+      text.includes('earbud'),
+  },
+  {
+    id: 'cameras',
+    title: 'Cameras',
+    Icon: Camera,
+    match: (text) =>
+      text.includes('camera') ||
+      text.includes('caméra') ||
+      text.includes('photo') ||
+      text.includes('vidéo') ||
+      text.includes('video') ||
+      text.includes('optique'),
+  },
+  {
+    id: 'ordinateurs-telephone',
+    title: 'Ordinateurs & téléphone',
+    Icon: Laptop,
+    match: (text) =>
+      text.includes('ordinateur') ||
+      text.includes('laptop') ||
+      text.includes('computer') ||
+      /\bpc\b/.test(text) ||
+      text.includes('téléphone') ||
+      text.includes('telephone') ||
+      text.includes('smartphone') ||
+      text.includes('iphone') ||
+      text.includes('android'),
+  },
+  {
+    id: 'tablette-tv',
+    title: 'Tablette & TV',
+    Icon: Tv,
+    match: (text) => {
+      if (text.includes('tablette') || text.includes('tablet')) return true;
+      if (text.includes('television') || text.includes('télévision')) return true;
+      if (/\btv\b/.test(text)) return true;
+      if (text.includes('télé') && !text.includes('téléphone') && !text.includes('telephone')) return true;
+      return false;
+    },
+  },
+];
+
+const productMatchesHomeSection = (product, section) =>
+  product.categories?.some((cat) => {
+    const text = `${cat.name || ''} ${cat.slug || ''}`.toLowerCase();
+    return section.match(text);
+  });
 
 // Category Icon Helper Mapping
 const CategoryIcon = ({ name, className, ...props }) => {
@@ -235,6 +303,9 @@ function App() {
   const [detailQty, setDetailQty] = useState(1);
   const [logoClicks, setLogoClicks] = useState(0);
   const [showAllBrands, setShowAllBrands] = useState(false);
+  const [showAllVehicles, setShowAllVehicles] = useState(false);
+  const [expandedHomeSections, setExpandedHomeSections] = useState({});
+  const [showAllGridProducts, setShowAllGridProducts] = useState(false);
   const [showDevMode, setShowDevMode] = useState(() => {
     return localStorage.getItem('shopushindi_dev_mode') === 'true';
   });
@@ -242,7 +313,6 @@ function App() {
   // Category dropdown state & ref
   const [isCategoryDropdownOpen, setIsCategoryDropdownOpen] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-  const [isCategoriesExpanded, setIsCategoriesExpanded] = useState(false);
   const categoryDropdownRef = useRef(null);
 
   const handleLogoClick = (e) => {
@@ -432,6 +502,11 @@ function App() {
     };
   }, []);
 
+  // Reset "voir plus" grille quand les filtres changent
+  useEffect(() => {
+    setShowAllGridProducts(false);
+  }, [selectedCategory, debouncedSearch, homeProductTab, sortBy]);
+
   // Fetch products and categories when filter params change
   useEffect(() => {
     const loadData = async () => {
@@ -442,7 +517,9 @@ function App() {
           wooCommerceService.getProducts({
             category: selectedCategory,
             search: debouncedSearch,
-            sort: sortBy
+            sort: sortBy,
+            perPage: 100,
+            fetchAll: true
           }),
           wooCommerceService.getCategories()
         ]);
@@ -713,47 +790,27 @@ function App() {
     } else if (homeProductTab === 'populaire') {
       list = [...products].sort((a, b) => (b.rating || 0) - (a.rating || 0) || (b.reviews_count || 0) - (a.reviews_count || 0));
     } else {
-      // Default: 'arrivage' (new arrivals), sort by newest first (descending ID)
-      list = [...products].sort((a, b) => b.id - a.id);
+      // Default: 'arrivage' (new arrivals), newest published first
+      list = [...products].sort(compareProductsByRecency);
     }
 
     // Filter by selected category locally as well for absolute precision
     if (selectedCategory && selectedCategory !== 'all') {
-      list = list.filter(p => p.categories?.some(cat => String(cat.id) === String(selectedCategory)));
+      list = list.filter(p =>
+        p.categories?.some(cat =>
+          String(cat.id) === String(selectedCategory) ||
+          cat.slug === selectedCategory ||
+          cat.name?.toLowerCase() === String(selectedCategory).toLowerCase()
+        )
+      );
     }
 
-    // Filter out vehicles for the homepage grid, only if there are non-vehicle products in the list
-    const hasNonVehicles = list.some((p) => {
-      const isVeh = p.categories?.some(cat =>
-        cat.name?.toLowerCase().includes('vehicule') ||
-        cat.name?.toLowerCase().includes('véhicule') ||
-        cat.name?.toLowerCase().includes('voiture') ||
-        cat.name?.toLowerCase().includes('engin') ||
-        cat.slug?.toLowerCase().includes('vehicule') ||
-        cat.slug?.toLowerCase().includes('véhicule')
-      ) ||
-        ['mercedes', 'toyota', 'subaru', 'subari', 'howo'].some(brand =>
-          p.brand?.toLowerCase().includes(brand) ||
-          p.name?.toLowerCase().includes(brand)
-        );
-      return !isVeh;
-    });
+    // Filter out vehicles for the homepage grid only when browsing all categories and when non-vehicle products exist
+    const hasNonVehicles = list.some((p) => !isVehicleProduct(p));
 
     const filtered = list.filter((p) => {
       if (selectedCategory !== 'all' || !hasNonVehicles) return true;
-      const isVehicle = p.categories?.some(cat =>
-        cat.name?.toLowerCase().includes('vehicule') ||
-        cat.name?.toLowerCase().includes('véhicule') ||
-        cat.name?.toLowerCase().includes('voiture') ||
-        cat.name?.toLowerCase().includes('engin') ||
-        cat.slug?.toLowerCase().includes('vehicule') ||
-        cat.slug?.toLowerCase().includes('véhicule')
-      ) ||
-        ['mercedes', 'toyota', 'subaru', 'subari', 'howo'].some(brand =>
-          p.brand?.toLowerCase().includes(brand) ||
-          p.name?.toLowerCase().includes(brand)
-        );
-      return !isVehicle;
+      return !isVehicleProduct(p);
     });
 
     // Limit to the 5 most recently added products for the arrivals tab (only when browsing all categories)
@@ -762,6 +819,23 @@ function App() {
     }
     return filtered;
   })();
+
+  // Grille principale : Si une catégorie spécifique est sélectionnée, afficher tous ses produits
+  const visibleGridProducts = (() => {
+    if (selectedCategory !== 'all') {
+      return displayedProducts;
+    }
+    if (homeProductTab === 'arrivage') {
+      return displayedProducts;
+    }
+    if (showAllGridProducts) return displayedProducts;
+    return displayedProducts.slice(0, 10);
+  })();
+
+  const canExpandGrid =
+    selectedCategory === 'all' &&
+    homeProductTab !== 'arrivage' &&
+    displayedProducts.length > 10;
 
   return (
     <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col font-sans selection:bg-emerald-500 selection:text-white">
@@ -782,7 +856,7 @@ function App() {
             {/* Logo brand */}
             <div className="flex items-center justify-center mb-6">
               <div className="h-16 w-48 overflow-hidden flex items-center justify-center p-0">
-                <img src="/logo.png" alt="ShopUshindi" className="w-full h-full object-contain" />
+                <img src={`${import.meta.env.BASE_URL}logo.png`} alt="ShopUshindi" className="w-full h-full object-contain" />
               </div>
             </div>
 
@@ -915,7 +989,7 @@ function App() {
               className="flex flex-col items-center justify-center text-center cursor-pointer"
             >
               <button onClick={(e) => { e.stopPropagation(); handleLogoClick(e); }} aria-label="Logo — activer le mode développeur" className="h-10 w-28 overflow-hidden flex items-center justify-center bg-transparent border-none p-0">
-                <img src="/logo.png" alt="ShopUshindi" className="w-full h-full object-contain object-center" />
+                <img src={`${import.meta.env.BASE_URL}logo.png`} alt="ShopUshindi" className="w-full h-full object-contain object-center" />
               </button>
               <span className="text-emerald-500 font-bold text-[7px] tracking-wide -mt-1">La victoire de la qualité et du service!</span>
             </div>
@@ -988,7 +1062,7 @@ function App() {
           {/* Header */}
           <div className={`mobile-menu-header ${theme === 'light' ? 'border-slate-100' : 'border-slate-800'}`}>
             <div className="h-10 w-32 overflow-hidden flex items-center justify-start">
-              <img src="/logo.png" alt="ShopUshindi" className="w-full h-full object-contain object-left" />
+              <img src={`${import.meta.env.BASE_URL}logo.png`} alt="ShopUshindi" className="w-full h-full object-contain object-left" />
             </div>
             <button
               onClick={() => setIsMobileMenuOpen(false)}
@@ -1127,7 +1201,7 @@ function App() {
                 className="flex flex-col items-center justify-center text-center cursor-pointer group"
               >
                 <button onClick={(e) => { e.stopPropagation(); handleLogoClick(e); }} aria-label="Logo — activer le mode développeur" className="h-14 w-48 overflow-hidden flex items-center justify-center transition duration-300 group-hover:scale-105 bg-transparent border-none p-0">
-                  <img src="/logo.png" alt="ShopUshindi" className="w-full h-full object-contain object-center" />
+                  <img src={`${import.meta.env.BASE_URL}logo.png`} alt="ShopUshindi" className="w-full h-full object-contain object-center" />
                 </button>
                 <span className="text-emerald-500 font-bold text-[10px] tracking-wide mt-1">La victoire de la qualité et du service!</span>
               </div>
@@ -1425,17 +1499,7 @@ function App() {
                 >
                   {(() => {
                     const displayList = categories.filter(c => c.id !== 'all');
-
-                    const categoryChangeMap = {
-                      'smartphones': '+36',
-                      'ordinateurs portables': '+6',
-                      'comprimés': '+4',
-                      'montres connectées': '+4',
-                      'sneakers': '+12',
-                      'audio': '+8',
-                    };
-
-                    const visibleCategories = isCategoriesExpanded ? displayList : displayList.slice(0, 5);
+                    const visibleCategories = displayList;
 
                     const renderCustomIcon = (name) => {
                       const norm = name.toLowerCase();
@@ -1513,11 +1577,13 @@ function App() {
                             const handleCategoryClick = () => {
                               setSelectedCategory(cat.id);
                               setSearchQuery('');
-                              const el = document.getElementById('products-section');
-                              el?.scrollIntoView({ behavior: 'smooth' });
+                              setHomeProductTab('arrivage');
+                              setShowAllGridProducts(true);
+                              setTimeout(() => {
+                                const el = document.getElementById('products-section');
+                                el?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                              }, 100);
                             };
-
-                            const change = categoryChangeMap[cat.name.toLowerCase()] || null;
 
                             return (
                               <div
@@ -1535,27 +1601,11 @@ function App() {
                                   <span className="text-[14px] font-bold text-black dark:text-slate-200">
                                     {cat.count}
                                   </span>
-                                  {change && (
-                                    <span className="text-[14px] font-bold text-green-600 dark:text-green-500 ml-0.5">
-                                      {change}
-                                    </span>
-                                  )}
                                 </div>
                               </div>
                             );
                           })}
                         </div>
-                        {displayList.length > 5 && (
-                          <div className="flex justify-center mt-6 pt-4 border-t border-slate-100 dark:border-white/5">
-                            <button
-                              onClick={() => setIsCategoriesExpanded(!isCategoriesExpanded)}
-                              className="flex items-center gap-1.5 px-5 py-2.5 rounded-full border border-slate-200 dark:border-white/10 text-xs md:text-sm font-semibold text-black dark:text-white hover:bg-slate-50 dark:hover:bg-white/5 transition duration-300 shadow-sm"
-                            >
-                              {isCategoriesExpanded ? "Voir moins de catégories" : "Voir plus de catégories"}
-                              <ChevronDown size={15} className={`transition-transform duration-300 ${isCategoriesExpanded ? 'rotate-180' : ''}`} />
-                            </button>
-                          </div>
-                        )}
                       </>
                     );
                   })()}
@@ -1572,7 +1622,7 @@ function App() {
                     onClick={() => setCurrentTab('categories')}
                     className="text-xs text-emerald-400 dark:text-emerald-400 font-semibold hover:underline"
                   >
-                    Tout voir ({categories.length})
+                    Tout voir ({categories.filter(c => c.id !== 'all').length})
                   </button>
                 </div>
 
@@ -1615,6 +1665,8 @@ function App() {
                               setIsCategoryDropdownOpen(false);
                               setSelectedProduct(null);
                               setCurrentTab('home');
+                              setHomeProductTab('arrivage');
+                              setShowAllGridProducts(false);
                               setTimeout(() => {
                                 const el = document.getElementById('products-section');
                                 el?.scrollIntoView({ behavior: 'smooth', block: 'start' });
@@ -1652,22 +1704,15 @@ function App() {
               {(() => {
                 if (selectedCategory !== 'all') return null;
 
-                const vehicleProducts = products.filter(p =>
-                  p.categories?.some(cat =>
-                    cat.name?.toLowerCase().includes('vehicule') ||
-                    cat.name?.toLowerCase().includes('véhicule') ||
-                    cat.name?.toLowerCase().includes('voiture') ||
-                    cat.name?.toLowerCase().includes('engin') ||
-                    cat.slug?.toLowerCase().includes('vehicule') ||
-                    cat.slug?.toLowerCase().includes('véhicule')
-                  ) ||
-                  ['mercedes', 'toyota', 'subaru', 'subari', 'howo'].some(brand =>
-                    p.brand?.toLowerCase().includes(brand) ||
-                    p.name?.toLowerCase().includes(brand)
-                  )
-                );
+                const vehicleProducts = products
+                  .filter(p => isVehicleProduct(p))
+                  .sort(compareProductsByRecency);
 
                 if (vehicleProducts.length === 0) return null;
+
+                const visibleVehicles = showAllVehicles
+                  ? vehicleProducts
+                  : vehicleProducts.slice(0, 10);
 
                 return (
                   <div className="space-y-6 pt-16 md:pt-24 border-b border-white/5 pb-12">
@@ -1682,7 +1727,7 @@ function App() {
                     </div>
 
                     <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4 md:gap-6 product-grid-container mt-6">
-                      {vehicleProducts.map((product) => {
+                      {visibleVehicles.map((product) => {
                         const isFav = favorites.some((fav) => fav.id === product.id);
                         const isFree = Number(product.price) === 0 || !product.price;
                         return (
@@ -1754,6 +1799,22 @@ function App() {
                         );
                       })}
                     </div>
+
+                    {vehicleProducts.length > 10 && (
+                      <div className="flex justify-center mt-8">
+                        <button
+                          onClick={() => setShowAllVehicles(!showAllVehicles)}
+                          className="inline-flex items-center gap-2 px-6 py-2.5 rounded-xl border border-white/10 bg-slate-900/40 hover:bg-slate-900/80 hover:border-emerald-500/30 text-xs font-semibold text-slate-300 hover:text-white transition-all duration-300 shadow-md cursor-pointer hover:scale-[1.02]"
+                        >
+                          <span>
+                            {showAllVehicles
+                              ? 'Voir moins'
+                              : `Voir plus (${vehicleProducts.length - 10})`}
+                          </span>
+                          <ChevronDown size={14} className={`transition-transform duration-300 ${showAllVehicles ? 'rotate-180' : ''}`} />
+                        </button>
+                      </div>
+                    )}
                   </div>
                 );
               })()}
@@ -1974,9 +2035,10 @@ function App() {
                     </div>
                   )
                 ) : (
-                  /* GORGEOUS PRODUCT GRID */
+                  <>
+                  {/* GORGEOUS PRODUCT GRID */}
                   <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4 md:gap-6 product-grid-container mt-8 md:mt-10">
-                    {displayedProducts.map((product) => {
+                    {visibleGridProducts.map((product) => {
                       const isFav = favorites.some((fav) => fav.id === product.id);
                       const isFree = Number(product.price) === 0 || !product.price;
                       return (
@@ -2070,25 +2132,60 @@ function App() {
                       );
                     })}
                   </div>
+                  {canExpandGrid && (
+                    <div className="flex justify-center mt-8">
+                      <button
+                        onClick={() => setShowAllGridProducts(!showAllGridProducts)}
+                        className="inline-flex items-center gap-2 px-6 py-2.5 rounded-xl border border-white/10 bg-slate-900/40 hover:bg-slate-900/80 hover:border-emerald-500/30 text-xs font-semibold text-slate-300 hover:text-white transition-all duration-300 shadow-md cursor-pointer hover:scale-[1.02]"
+                      >
+                        <span>
+                          {showAllGridProducts
+                            ? 'Voir moins'
+                            : `Voir plus (${displayedProducts.length - 10})`}
+                        </span>
+                        <ChevronDown
+                          size={14}
+                          className={`transition-transform duration-300 ${showAllGridProducts ? 'rotate-180' : ''}`}
+                        />
+                      </button>
+                    </div>
+                  )}
+                  </>
                 )}
               </div>
 
-              {/* Section: Populaire */}
-              <div className="space-y-6 !mt-32 md:!mt-40 pt-20 border-t border-white/5 animate-fade-in">
-                <div className="flex items-center justify-between border-b border-white/5 pb-4 mb-6">
-                  <h2 className="text-xl md:text-2xl font-extrabold text-white flex items-center gap-2">
-                    <Star className="text-amber-400 fill-amber-400 animate-pulse" size={20} />
-                    Les Plus Populaires
-                  </h2>
-                </div>
-                {products.length === 0 ? (
-                  <div className="text-slate-500 text-sm py-4">Aucun produit disponible pour le moment.</div>
-                ) : (
-                  <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4 md:gap-6 product-grid-container mt-6">
-                    {[...products]
-                      .sort((a, b) => b.rating - a.rating || b.reviews_count - a.reviews_count)
-                      .slice(0, 5)
-                      .map((product) => {
+              {/* Sections catégories (masquées si aucun produit) */}
+              {selectedCategory === 'all' && HOME_CATEGORY_SECTIONS.map((section) => {
+                const sectionProducts = products
+                  .filter((p) => productMatchesHomeSection(p, section))
+                  .sort(compareProductsByRecency);
+
+                if (sectionProducts.length === 0) return null;
+
+                const isExpanded = !!expandedHomeSections[section.id];
+                const visibleProducts = isExpanded
+                  ? sectionProducts
+                  : sectionProducts.slice(0, 10);
+                const SectionIcon = section.Icon;
+
+                return (
+                  <div
+                    key={section.id}
+                    className="space-y-6 !mt-32 md:!mt-40 pt-20 border-t border-white/5 animate-fade-in"
+                  >
+                    <div className="flex items-center justify-between border-b border-white/5 pb-4 mb-6">
+                      <h2 className="text-xl md:text-2xl font-extrabold text-white flex items-center gap-2">
+                        <SectionIcon className="text-emerald-400" size={20} />
+                        {section.title}
+                      </h2>
+                      <span className="text-slate-500 text-xs">
+                        {sectionProducts.length}{' '}
+                        {sectionProducts.length > 1 ? 'articles disponibles' : 'article disponible'}
+                      </span>
+                    </div>
+
+                    <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4 md:gap-6 product-grid-container mt-6">
+                      {visibleProducts.map((product) => {
                         const isFav = favorites.some((fav) => fav.id === product.id);
                         const isFree = Number(product.price) === 0 || !product.price;
                         return (
@@ -2104,7 +2201,7 @@ function App() {
                                 }}
                                 className={`favorite-btn ${isFav ? 'active text-rose-500' : 'text-slate-400 hover:text-white'}`}
                               >
-                                <Heart size={16} fill={isFav ? "currentColor" : "none"} />
+                                <Heart size={16} fill={isFav ? 'currentColor' : 'none'} />
                               </button>
                               {product.on_sale && <span className="sale-badge">Promo</span>}
                               <img
@@ -2140,7 +2237,7 @@ function App() {
                               <div className="card-footer">
                                 <div className="card-price-group">
                                   <span className={`card-price-current ${isFree ? 'price-request' : ''}`}>
-                                    {isFree ? (isVehicleProduct(product) ? "Prix disponible sur demande" : "Sur demande") : `$${product.price}`}
+                                    {isFree ? (isVehicleProduct(product) ? 'Prix disponible sur demande' : 'Sur demande') : `$${product.price}`}
                                   </span>
                                   {product.on_sale && <span className="card-price-old">${product.regular_price}</span>}
                                 </div>
@@ -2159,9 +2256,34 @@ function App() {
                           </div>
                         );
                       })}
+                    </div>
+
+                    {sectionProducts.length > 10 && (
+                      <div className="flex justify-center mt-8">
+                        <button
+                          onClick={() =>
+                            setExpandedHomeSections((prev) => ({
+                              ...prev,
+                              [section.id]: !prev[section.id],
+                            }))
+                          }
+                          className="inline-flex items-center gap-2 px-6 py-2.5 rounded-xl border border-white/10 bg-slate-900/40 hover:bg-slate-900/80 hover:border-emerald-500/30 text-xs font-semibold text-slate-300 hover:text-white transition-all duration-300 shadow-md cursor-pointer hover:scale-[1.02]"
+                        >
+                          <span>
+                            {isExpanded
+                              ? 'Voir moins'
+                              : `Voir plus (${sectionProducts.length - 10})`}
+                          </span>
+                          <ChevronDown
+                            size={14}
+                            className={`transition-transform duration-300 ${isExpanded ? 'rotate-180' : ''}`}
+                          />
+                        </button>
+                      </div>
+                    )}
                   </div>
-                )}
-              </div>
+                );
+              })}
 
               {/* Section: Récemment Vues */}
               {recentlyViewed.length > 0 && (
@@ -2560,11 +2682,13 @@ function App() {
                       onClick={() => {
                         setSelectedCategory(cat.id);
                         setSearchQuery('');
+                        setHomeProductTab('arrivage');
+                        setShowAllGridProducts(true);
                         setCurrentTab('home');
                         setTimeout(() => {
                           const el = document.getElementById('products-section');
                           el?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-                        }, 50);
+                        }, 100);
                       }}
                       className="group relative h-48 rounded-3xl cursor-pointer glass border border-white/5 hover:border-emerald-500/40 shadow-xl transition-all duration-300 hover:-translate-y-1 hover:bg-slate-900/60 hover:shadow-emerald-500/5 flex flex-col items-center justify-center p-6"
                     >
